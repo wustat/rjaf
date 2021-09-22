@@ -128,23 +128,10 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
         urowvec count_split = sum(count);
         qual(j) = static_cast<unsigned int>(min(count_split)>=nodesize &&
           min(sum(count!=0))>=2 && ids(0)!=ids(1));
-        // if (i==2 & j==2) {
-        //   Rcout << "var = " << i << ", cutoff = " << setprecision(20) << cutoffs(j) <<
-        //     ", trt = " << trts.row(j) << ", util = " << util.row(j) <<
-        //       ", N.split = " << count_split << ", N.trt = " << sum(count!=0) << endl;
-        // }
       }
-      // 
-      // Rcout << "var = " << i << ", cutoff = " << setprecision(9) << cutoffs <<
-      //   ", trt = " << trts << ", util = " << util << ", qual = " << qual << endl;
-      // 
       uvec id_notqual = find(qual==0);
       util.shed_rows(id_notqual); cutoffs.shed_rows(id_notqual);
       trts.shed_rows(id_notqual);
-      // if (i==1) {
-      //   Rcout << "var = " << i << ", cutoff = " << cutoffs <<
-      //     ", trt = " << trts << ", util = " << util << ", qual = " << qual << endl;
-      // }
       if (util.n_rows==0) { // no qualified record for ith var
         qualified(i) = 0;
       } else {
@@ -318,9 +305,6 @@ mat growTree_cpp(const vec &y_trainest, const mat &X_trainest,
           unsigned int var = var_sub(static_cast<unsigned int>(var_id));
           double cutoff = split["cutoff"];
           if (newsplit(vars, cutoffs, var, cutoff)) { // new split
-            // if (max(node)==1 || max(node)==3) {
-            //   Rcout << "var = " << var << ", cutoff = " << cutoff << endl;
-            // }
             parentnode.push_back(node2split); parentnode.push_back(node2split);
             nodes2split.insert(max(node)+1); node.push_back(max(node)+1);
             nodes2split.insert(max(node)+1); node.push_back(max(node)+1);
@@ -343,21 +327,12 @@ mat growTree_cpp(const vec &y_trainest, const mat &X_trainest,
       }
     }
   } while (nodes2split.size() > 0); // still at least 1 node to split
-  // for (unsigned int i = 0; i < type.size(); ++i) {
-  //   Rcout << "patient.node = " << parentnode[i] << ", node = " <<
-  //     node[i] << ", type = " << type[i] << ", util = " << util[i] << endl;
-  // }
   for (unsigned int i = 0; i < type.size(); ++i) {
     if (type[i]=="leaf") {
-      // filter.insert(filter.begin()+i, ids_train(filter[i]));
-      // filter.erase(filter.begin()+i+1);
       filter_est.insert(filter_est.begin()+i, ids_est(filter_est[i]));
       filter_est.erase(filter_est.begin()+i+1);
-      // filter_val.insert(filter_val.begin()+i, ids_val(filter_val[i]));
-      // filter_val.erase(filter_val.begin()+i+1);
     } else {
       type.erase(i);
-      // filter.erase(filter.begin()+i);
       filter_est.erase(filter_est.begin()+i);
       filter_val.erase(filter_val.begin()+i);
       --i;
@@ -369,14 +344,4 @@ mat growTree_cpp(const vec &y_trainest, const mat &X_trainest,
     mat_wt(filter_val[i], filter_est[i]) += 1.0/filter_est[i].n_elem;
   }
   return mat_wt;
-}
-
-void growForest_cpp() {
-
-}
-
-// [[Rcpp::export]]
-void tmpf() {
-  Function Rquantile("quantile");
-  vec y = as<vec>(Rquantile(randu(30), regspace(0.1,0.1,0.9), _["type"]=5));
 }
