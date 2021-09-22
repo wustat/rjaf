@@ -66,15 +66,16 @@ splitting.var.cutoff <- function(data, y, trt, var, prob, cutoff,
       group_by(df, rel), avg.split=sum(numer)/sum(denom), N.split=sum(N),
       .groups="drop"), df, by="rel"),
     reg.avg.leaf=(avg.leaf*N+lambda*avg.split)/(N+lambda))
-  splits.R.2 <- NROW(filter(dplyr::summarise(
-    group_by(df, rel), N.trt=n(), N.split=sum(N.split), .groups="drop"),
-    N.trt>=2 & N.split >= nodesize))==2
+  splits.R.2 <- (NROW(filter(dplyr::summarise(
+    group_by(df, rel), N.trt=n(), N.split=mean(N.split), .groups="drop"),
+    N.trt>=2 & N.split >= nodesize))==2)
   if (splits.R.2) {
     if (ipw) {
       res <- dplyr::select(mutate(
         ungroup(filter(group_by(df, rel), reg.avg.leaf==max(reg.avg.leaf))),
         util=reg.avg.leaf*N/prob,
-        var=var, cutoff=cutoff), all_of(c("var", "rel", "cutoff", trt, "util")))
+        var=var, cutoff=cutoff), 
+        all_of(c("var", "rel", "cutoff", trt, "util")))
     } else {
       res <- dplyr::select(mutate(
       ungroup(filter(group_by(df, rel), reg.avg.leaf==max(reg.avg.leaf))),
@@ -89,9 +90,9 @@ splitting.var.cutoff <- function(data, y, trt, var, prob, cutoff,
 splitting <- function(data, y, trt, vars, prob, lambda=0.5, ipw=TRUE,
                       nodesize=5) {
   res <- do.call(c,lapply(vars, function(var) {
-    cutoffs <- unique(pull(data, var))
-    cutoffs <- if (length(cutoffs)>10L)
-      quantile(cutoffs, seq(0.1,0.9,0.1)) else cutoffs
+    cutoffs <- sort(unique(pull(data, var)))
+    cutoffs <- if (length(cutoffs)>=10L)
+      quantile(cutoffs, seq(0.1,0.9,0.1), type=5) else cutoffs
     res.by.cutoff <- 
       lapply(cutoffs, splitting.var.cutoff, data=data, y=y, trt=trt, var=var, 
              prob=prob, lambda=lambda, ipw=ipw, nodesize=nodesize)
