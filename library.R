@@ -17,8 +17,7 @@ sim.data <- function(n, K, gamma, sigma, prob=rep(1,K+1)/(K+1)) {
                 across(c(id, trt), as.character)))
 }
 
-residualize <- function(data, y, id, vars, nfolds=5,
-                        fun.rf="ranger") {
+residualize <- function(data, y, vars, nfolds=5, fun.rf="ranger") {
   data$fold <- sample(1:nfolds, NROW(data), T, rep(1, nfolds))
   if (fun.rf=="randomForest") {
     dplyr::select(bind_rows(lapply(1:nfolds, function(i) {
@@ -165,51 +164,69 @@ growTree <- function(data.trainest, data.validation, y, id, trt, vars, prob,
 growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                        ntrt=5, nvar=3, lambda=0.5, ipw=TRUE, nodesize=5,
                        ntree=1000, prop.train=0.5, epi=0.1, resid=TRUE,
-                       parallel=FALSE, threads=parallel::detectCores()/2) {
+                       parallel=FALSE, threads=parallel::detectCores()/2,
+                       Rcpp=TRUE, setseed=FALSE, seed=1) {
   trts <- unique(pull(data.trainest, trt))
+  data.trainest <- mutate(data.trainest, across(c(id, trt), as.character))
+  data.validation <- mutate(data.validation, across(c(id, trt), as.character))
   if (all(!paste0(y, trts) %in% names(data.validation)))
     stop("Incomplete treatment-specific outcomes for data.validation!")
-  if (resid) data.trainest <- residualize(data.trainest, y, id, vars)
-  Rownames <- sort(as.character(pull(data.validation, id)))
-  Colnames <- sort(as.character(pull(data.trainest, id)))
-  if (parallel) {
-    threads <- numbers::GCD(ntree, threads)
-    cl <- parallel::makeCluster(threads)
-    doParallel::registerDoParallel(cl)
-    `%dopar%` <- foreach::`%dopar%`
-    mat.weight <- Reduce("+", lapply(1:(ntree/threads), function(i) {
-      ls.mat <- foreach::foreach(
-        i=1:threads,
-        .export=c("growTree", "splitting", "splitting.var.cutoff", "util.root",
-                  formalArgs(growTree)),
-        .packages=c("tibble","dplyr","stringr","tidyr", "readr")) %dopar% {
-          growTree(data.trainest, data.validation, y, id, trt, vars, prob, ntrt,
-                   nvar, lambda, ipw, nodesize, prop.train, epi)$mat
-        }
-      Reduce("+",ls.mat)}))
-    parallel::stopCluster(cl)
-    dimnames(mat.weight) <- list(Rownames, Colnames)
+  if (resid) data.trainest <- residualize(data.trainest, y, vars)
+  if (Rcpp) {
+    ls.forest <- 
+      growForest_cpp(pull(data.trainest, y), 
+                     as.matrix(select(data.trainest, all_of(vars))),
+                     as.integer(factor(pull(data.trainest, trt), trts)),
+                     pull(data.trainest, prob),
+                     as.matrix(select(data.validation, all_of(vars))),
+                     ntrt, nvar, lambda, ipw, nodesize, ntree,
+                     prop.train, epi, setseed, seed)
+    res <- tibble(!!(id):=as.character(pull(data.validation, id)),
+                  !!(trt):=as.character(trts[ls.forest$trt.dof]),
+                  !!(paste0(y, ".pred")):=as.numeric(ls.forest$Y.pred))
   } else {
-    mat.weight <- Matrix::Matrix(0, nrow(data.validation), nrow(data.trainest),
-                                 dimnames=list(Rownames, Colnames))
-    invisible(sapply(1:ntree, function(i) {
-      mat.weight <<-
-        growTree(data.trainest, data.validation, y, id, trt, vars, prob, ntrt,
-                 nvar, lambda, ipw, nodesize, prop.train, epi)$mat + mat.weight
-    }))
-  }
-  mat.weight <- mat.weight / ntree
-  outcome.p <- sapply(trts, function(i) {
-    weight.tmp <- mat.weight[,pull(filter(data.trainest, trt==i), id)]
-    as.vector((weight.tmp / Matrix::rowSums(weight.tmp)) %*% 
-                pull(filter(data.trainest, trt==i), y))
-  })
-  dimnames(outcome.p) <- list(rownames(mat.weight), trts)
-  res <- dplyr::summarise(
-    group_by(pivot_longer(mutate(as_tibble(outcome.p),!!id:=rownames(mat.weight)),
-                          cols=-all_of(id), names_to=trt, values_to=y),!!sym(id)),
-    !!trt:=(!!sym(trt))[!!sym(y)==max(!!sym(y))],
-    !!(paste0(y, ".pred")):=max(!!sym(y)), .groups="drop")
+    Rownames <- sort(as.character(pull(data.validation, id)))
+    Colnames <- sort(as.character(pull(data.trainest, id)))
+    if (parallel) {
+      threads <- numbers::GCD(ntree, threads)
+      cl <- parallel::makeCluster(threads)
+      doParallel::registerDoParallel(cl)
+      `%dopar%` <- foreach::`%dopar%`
+      mat.weight <- Reduce("+", lapply(1:(ntree/threads), function(i) {
+        ls.mat <- foreach::foreach(
+          i=1:threads,
+          .export=c("growTree", "splitting", "splitting.var.cutoff", "util.root",
+                    formalArgs(growTree)),
+          .packages=c("tibble","dplyr","stringr","tidyr", "readr")) %dopar% {
+            growTree(data.trainest, data.validation, y, id, trt, vars, prob, ntrt,
+                     nvar, lambda, ipw, nodesize, prop.train, epi)$mat
+          }
+        Reduce("+",ls.mat)}))
+      parallel::stopCluster(cl)
+      dimnames(mat.weight) <- list(Rownames, Colnames)
+    } else {
+      mat.weight <- Matrix::Matrix(0, nrow(data.validation), nrow(data.trainest),
+                                   dimnames=list(Rownames, Colnames))
+      invisible(sapply(1:ntree, function(i) {
+        mat.weight <<-
+          growTree(data.trainest, data.validation, y, id, trt, vars, prob, ntrt,
+                   nvar, lambda, ipw, nodesize, prop.train, epi)$mat + mat.weight
+      }))
+    }
+    mat.weight <- mat.weight / ntree
+    outcome.p <- sapply(trts, function(i) {
+      weight.tmp <- mat.weight[,pull(filter(data.trainest, trt==i), id)]
+      as.vector((weight.tmp / Matrix::rowSums(weight.tmp)) %*% 
+                  pull(filter(data.trainest, trt==i), y))
+    })
+    dimnames(outcome.p) <- list(rownames(mat.weight), trts)
+    res <- dplyr::summarise(
+      group_by(pivot_longer(
+        mutate(as_tibble(outcome.p),!!id:=rownames(mat.weight)),
+        cols=-all_of(id), names_to=trt, values_to=y),!!sym(id)),
+      !!trt:=(!!sym(trt))[!!sym(y)==max(!!sym(y))],
+      !!(paste0(y, ".pred")):=max(!!sym(y)), .groups="drop")
+  }  
   res <- rename_with(inner_join(res, mutate(pivot_longer(
     dplyr::select(data.validation, all_of(c(id, paste0(y, trts)))),
     cols=paste0(y, trts), names_to=trt, names_prefix=y, values_to=y),
