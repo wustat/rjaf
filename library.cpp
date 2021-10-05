@@ -63,6 +63,7 @@ void set_seed(unsigned int seed) {
   set_seed_r(seed);  
 }
 
+// [[Rcpp::export]]
 List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
                    const double &lambda=0.5, const bool &ipw=true,
                    const unsigned int &nodesize=5) {
@@ -220,7 +221,143 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
 }
 
 // [[Rcpp::export]]
-mat growTree_cpp(const vec &y_trainest, const mat &X_trainest,
+mat growTree_nonreg(const vec &y_trainest, const mat &X_trainest,
+                    const uvec &trt_trainest, const vec &prob_trainest,
+                    const mat &X_val,
+                    const unsigned int &ntrts=5, const unsigned int &nvars=3,
+                    const double &lambda=0.5, const bool &ipw=true,
+                    const unsigned int &nodesize=5, const double &prop_train=0.5,
+                    const double &epi=0.1, const bool &setseed=false,
+                    const unsigned int &seed=1) {
+  if (setseed) set_seed(seed);
+  List list_ids = slice_sample(regspace<uvec>(0, X_trainest.n_rows-1),
+                               trt_trainest, prop_train);
+  const uvec ids_train = list_ids["ids_train"], ids_est = list_ids["ids_est"];
+  const uvec trt = trt_trainest(ids_train);
+  const vec y = y_trainest(ids_train), prob = prob_trainest(ids_train);
+  const mat X = X_trainest.rows(ids_train), X_est = X_trainest.rows(ids_est);
+  // X: training matrix
+  // utility at root
+  uvec trt_uniq = unique(trt);
+  unsigned int ntrt = trt_uniq.n_elem;
+  vec numer(ntrt), denom(ntrt), probs(ntrt);
+  uvec count(ntrt);
+  for (unsigned int t = 0; t < ntrt; ++t) {
+    uvec tmp = find(trt==trt_uniq(t));
+    vec y_trt = y(tmp);
+    count(t) = y_trt.n_elem;
+    probs(t) = mean(prob(tmp));
+    numer(t) = accu(y_trt)/(y_trt.n_elem+lambda);
+    denom(t) = y_trt.n_elem/(y_trt.n_elem+lambda);
+  }
+  vec regavg = 1 - denom;
+  regavg *= accu(numer)/accu(denom);
+  regavg += numer;
+  unsigned int id = index_max(regavg);
+  double util_root;
+  if (ipw) {
+    util_root = max(regavg)*count(id)/probs(id);
+  } else {
+    util_root = max(regavg)*accu(count);
+  }
+  // grow tree
+  IntegerVector parentnode = {0}, node = {1};
+  set<unsigned int> nodes2split; nodes2split.insert(1);
+  // filter records the row indices of X
+  vector<uvec> filter;
+  filter.push_back(regspace<uvec>(0, X.n_rows-1));
+  vector<uvec> filter_est;
+  filter_est.push_back(regspace<uvec>(0, X_est.n_rows-1));
+  vector<uvec> filter_val;
+  filter_val.push_back(regspace<uvec>(0, X_val.n_rows-1));
+  CharacterVector type = {"split"};
+  NumericVector util = {util_root};
+  vector<unsigned int> vars; vector<double> cutoffs;
+  // push-backs below are for root node only
+  vars.push_back(X.n_cols); cutoffs.push_back(0.0);
+  double mingain = epi*stddev(y);
+  do {
+    set<unsigned int> nodes2split_tmp = nodes2split;
+    for (set<unsigned int>::iterator i=nodes2split_tmp.begin();
+         i!=nodes2split_tmp.end(); ++i) {
+      unsigned int node2split = *i;
+      uvec ids = filter[node2split-1];
+      uvec ids_est = filter_est[node2split-1];
+      uvec ids_val = filter_val[node2split-1];
+      uvec trt_tmp = trt(ids);
+      uvec trt_sub = Rcpp::RcppArmadillo::sample(trt_uniq, ntrts, false);
+      uvec var_sub = Rcpp::RcppArmadillo::sample(regspace<uvec>(0, X.n_cols-1),
+                                                 nvars, false);
+      uvec ids4split = ids(index_subset(trt_tmp, trt_sub));
+      List split; int var_id;
+      if (ids4split.n_elem==0) { // trt_tmp and trt_sub are disjoint
+        var_id = -1;
+      } else { 
+        split = splitting_cpp(y(ids4split), X.submat(ids4split, var_sub),
+                              trt(ids4split), prob(ids4split),
+                              lambda, ipw, nodesize);
+        var_id = split["var"];
+      }
+      if (var_id==-1) { // split is null
+        type[node2split-1] = "leaf";
+        nodes2split.erase(node2split);
+      } else {
+        rowvec utils_split = split["util"];
+        if (accu(utils_split) - util[node2split-1] < mingain) {
+          type[node2split-1] = "leaf";
+          nodes2split.erase(node2split);
+        } else {
+          unsigned int var = var_sub(static_cast<unsigned int>(var_id));
+          double cutoff = split["cutoff"];
+          if (newsplit(vars, cutoffs, var, cutoff)) { // new split
+            parentnode.push_back(node2split); parentnode.push_back(node2split);
+            nodes2split.insert(max(node)+1); node.push_back(max(node)+1);
+            nodes2split.insert(max(node)+1); node.push_back(max(node)+1);
+            uvec var_tmp(1); var_tmp.fill(var);
+            filter.push_back(ids(find(X(ids,var_tmp).as_col()<cutoff)));
+            filter.push_back(ids(find(X(ids,var_tmp).as_col()>=cutoff)));
+            filter_est.push_back(ids_est(find(X_est(ids_est,var_tmp).as_col()<cutoff)));
+            filter_est.push_back(ids_est(find(X_est(ids_est,var_tmp).as_col()>=cutoff)));
+            filter_val.push_back(ids_val(find(X_val(ids_val,var_tmp).as_col()<cutoff)));
+            filter_val.push_back(ids_val(find(X_val(ids_val,var_tmp).as_col()>=cutoff)));
+            type[node2split-1] = "parent";
+            nodes2split.erase(node2split);
+            type.push_back("split"); type.push_back("split");
+            util.push_back(utils_split(0)); util.push_back(utils_split(1));
+          } else {
+            type[node2split-1] = "leaf";
+            nodes2split.erase(node2split);
+          }
+        }
+      }
+    }
+  } while (nodes2split.size() > 0); // at least 1 node to split
+  for (unsigned int i = 0; i < type.size(); ++i) {
+    if (type[i]=="leaf") {
+      // filter.insert(filter.begin()+i, ids_train(filter[i]));
+      // filter.erase(filter.begin()+i+1);
+      filter_est.insert(filter_est.begin()+i, ids_est(filter_est[i]));
+      filter_est.erase(filter_est.begin()+i+1);
+      // filter_val.insert(filter_val.begin()+i, ids_val(filter_val[i]));
+      // filter_val.erase(filter_val.begin()+i+1);
+    } else {
+      type.erase(i);
+      // filter.erase(filter.begin()+i);
+      filter_est.erase(filter_est.begin()+i);
+      filter_val.erase(filter_val.begin()+i);
+      --i;
+    }
+  }
+  // create weight matrix
+  mat mat_wt(X_val.n_rows, X_trainest.n_rows, fill::zeros);
+  for (unsigned int i = 0; i < type.size(); ++i) {
+    mat_wt(filter_val[i], filter_est[i]) += 1.0/filter_est[i].n_elem;
+  }
+  return mat_wt;
+}
+
+// [[Rcpp::export]]
+List growTree_reg(const vec &y_trainest, const mat &X_trainest,
                  const uvec &trt_trainest, const vec &prob_trainest,
                  const mat &X_val,
                  const unsigned int &ntrts=5, const unsigned int &nvars=3,
@@ -333,21 +470,45 @@ mat growTree_cpp(const vec &y_trainest, const mat &X_trainest,
   } while (nodes2split.size() > 0); // at least 1 node to split
   for (unsigned int i = 0; i < type.size(); ++i) {
     if (type[i]=="leaf") {
+      // filter.insert(filter.begin()+i, ids_train(filter[i]));
+      // filter.erase(filter.begin()+i+1);
       filter_est.insert(filter_est.begin()+i, ids_est(filter_est[i]));
       filter_est.erase(filter_est.begin()+i+1);
+      // filter_val.insert(filter_val.begin()+i, ids_val(filter_val[i]));
+      // filter_val.erase(filter_val.begin()+i+1);
     } else {
       type.erase(i);
+      // filter.erase(filter.begin()+i);
       filter_est.erase(filter_est.begin()+i);
       filter_val.erase(filter_val.begin()+i);
       --i;
     }
   }
-  // create weight matrix
-  mat mat_wt(X_val.n_rows, X_trainest.n_rows, fill::zeros);
+  uvec trts_uniq = unique(trt_trainest);
+  // create matrix
+  mat mat_regavg(X_val.n_rows, trts_uniq.n_elem, fill::zeros);
+  umat mat_present(X_val.n_rows, trts_uniq.n_elem, fill::zeros);
   for (unsigned int i = 0; i < type.size(); ++i) {
-    mat_wt(filter_val[i], filter_est[i]) += 1.0/filter_est[i].n_elem;
+    uvec trt_tmp = trt_trainest(filter_est[i]);
+    urowvec count(trts_uniq.n_elem), present(trts_uniq.n_elem);
+    vec y_tmp = y_trainest(filter_est[i]);
+    rowvec numer(trts_uniq.n_elem), denom(trts_uniq.n_elem);
+    for (unsigned int t = 0; t < trts_uniq.n_elem; ++t) {
+      uvec id_tmp = find(trt_tmp==trts_uniq(t));
+      if (id_tmp.n_elem==0) {
+        count(t) = 0; numer(t) = 0; denom(t) = 0; present(t) = 0;
+      } else {
+        numer(t) = accu(y_tmp(id_tmp))/(id_tmp.n_elem+lambda);
+        denom(t) = id_tmp.n_elem/(id_tmp.n_elem+lambda);
+        present(t) = 1;
+      }
+    }
+    rowvec regavg = 1 - denom; regavg *= sum(numer)/sum(denom);
+    regavg += numer;
+    mat_regavg.rows(filter_val[i]) += repmat(regavg, filter_val[i].n_elem, 1);
+    mat_present.rows(filter_val[i]) += repmat(present, filter_val[i].n_elem, 1);
   }
-  return mat_wt;
+  return List::create(_["regavg"]=mat_regavg, _["present"]=mat_present);
 }
 
 // [[Rcpp::export]]
@@ -356,23 +517,39 @@ List growForest_cpp(const vec &y_trainest, const mat &X_trainest,
                     const mat &X_val,
                     const unsigned int &ntrts=5, const unsigned int &nvars=3,
                     const double &lambda=0.5, const bool &ipw=true,
-                    const unsigned int &nodesize=5, const unsigned int &ntree=1000,
+                    const unsigned int &nodesize=5,
+                    const unsigned int &ntree=1000,
                     const double &prop_train=0.5, const double &epi=0.1,
-                    const bool &setseed=false, const unsigned int &seed=1) {
+                    const bool &setseed=false, const unsigned int &seed=1,
+                    const bool &reg=true) {
   if (setseed) set_seed(seed);
-  mat mat_wt(X_val.n_rows, X_trainest.n_rows, fill::zeros);
-  for (unsigned int i = 0; i < ntree; ++i) {
-    mat_wt += growTree_cpp(y_trainest, X_trainest, trt_trainest, prob_trainest,
-                           X_val, ntrts, nvars, lambda, ipw, nodesize,
-                           prop_train, epi);
-  }
-  mat_wt /= ntree;
   uvec trt_uniq = unique(trt_trainest);
   unsigned int ntrt = trt_uniq.n_elem;
   mat outcome(X_val.n_rows, ntrt, fill::zeros);
-  for (unsigned int t = 0; t < ntrt; ++t) {
-    uvec tmp = find(trt_trainest==trt_uniq(t));
-    outcome.col(t) = mat_wt.cols(tmp)*y_trainest(tmp)/sum(mat_wt.cols(tmp),1);
+  if (reg) {
+    mat numer(X_val.n_rows, ntrt, fill::zeros);
+    umat denom(X_val.n_rows, ntrt, fill::zeros);
+    for (unsigned int i = 0; i < ntree; ++i) {
+      List tree = growTree_reg(y_trainest, X_trainest, trt_trainest,
+                               prob_trainest, X_val, ntrts, nvars, lambda,
+                               ipw, nodesize, prop_train, epi);
+      mat regavg_tmp = tree["regavg"]; umat present_tmp = tree["present"];
+      numer += regavg_tmp%present_tmp;
+      denom += present_tmp;
+    }
+    outcome += numer/denom;
+  } else {
+    mat mat_wt(X_val.n_rows, X_trainest.n_rows, fill::zeros);
+    for (unsigned int i = 0; i < ntree; ++i) {
+      mat_wt += growTree_nonreg(y_trainest, X_trainest, trt_trainest,
+                                prob_trainest, X_val, ntrts, nvars, lambda,
+                                ipw, nodesize, prop_train, epi);
+    }
+    mat_wt /= ntree;
+    for (unsigned int t = 0; t < ntrt; ++t) {
+      uvec tmp = find(trt_trainest==trt_uniq(t));
+      outcome.col(t) = mat_wt.cols(tmp)*y_trainest(tmp)/sum(mat_wt.cols(tmp),1);
+    }
   }
   uvec idx_trt = index_max(outcome, 1);
   uvec trt_pred(idx_trt.n_elem, fill::zeros);
