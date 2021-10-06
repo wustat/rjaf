@@ -180,14 +180,14 @@ growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                      pull(data.trainest, prob),
                      as.matrix(select(data.validation, all_of(vars))),
                      ntrt, nvar, lambda, ipw, nodesize, ntree,
-                     prop.train, epi, setseed, seed, reg)
+                     prop.train, epi, reg, setseed, seed)
     res <- tibble(!!(id):=as.character(pull(data.validation, id)),
                   !!(trt):=as.character(trts[ls.forest$trt.dof]),
                   !!(paste0(y, ".pred")):=as.numeric(ls.forest$Y.pred))
   } else {
     Rownames <- sort(as.character(pull(data.validation, id)))
     Colnames <- sort(as.character(pull(data.trainest, id)))
-    if (parallel) {
+    if (parallel) { # deprecated
       threads <- numbers::GCD(ntree, threads)
       cl <- parallel::makeCluster(threads)
       doParallel::registerDoParallel(cl)
