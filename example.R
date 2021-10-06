@@ -6,17 +6,17 @@ library(readr)
 library(tidyr)
 library(randomForest)
 library(ranger)
-library(git2r)
 name_ssh_key <- "id_rsa"
-creds <- cred_ssh_key(ssh_path(paste0(name_ssh_key, ".pub")),
-                      ssh_path(name_ssh_key))
+creds <- git2r::cred_ssh_key(
+  git2r::ssh_path(paste0(name_ssh_key, ".pub")),
+  git2r::ssh_path(name_ssh_key))
 url.remote <- "git@github.com:wustat/dof.git"
 relpath2local <- "your/path/to/dof"
 abspath2local <- file.path(Sys.getenv("HOME"), relpath2local)
 if (dir.exists(abspath2local)) {
   git2r::pull(abspath2local, creds)
 } else {
-  clone(url.remote, abspath2local, credentials=creds)
+  git2r::clone(url.remote, abspath2local, credentials=creds)
 }
 source(file.path(abspath2local, "library.R"))
 Rcpp::sourceCpp(file.path(abspath2local,"library.cpp"))
