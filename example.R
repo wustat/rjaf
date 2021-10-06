@@ -13,13 +13,13 @@ creds <- cred_ssh_key(ssh_path(paste0(name_ssh_key, ".pub")),
 url.remote <- "git@github.com:wustat/dof.git"
 relpath2local <- "your/path/to/dof"
 abspath2local <- file.path(Sys.getenv("HOME"), relpath2local)
-if (dir.exists(path2local)) {
-  git2r::pull(path2local, creds)
+if (dir.exists(abspath2local)) {
+  git2r::pull(abspath2local, creds)
 } else {
-  clone(url.remote, path2local, credentials=creds)
+  clone(url.remote, abspath2local, credentials=creds)
 }
-source(file.path(path2local, "library.R"))
-Rcpp::sourceCpp(file.path(path2local,"library.cpp"))
+source(file.path(abspath2local, "library.R"))
+Rcpp::sourceCpp(file.path(abspath2local,"library.cpp"))
 n <- 10000; K <- 9; gamma <- 10; sigma <- 10
 id <- "id"; trts <- as.character(0:9); y <- "Y"; trt <- "trt"
 vars <- paste0("X", 1:3)
