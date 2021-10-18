@@ -44,7 +44,7 @@ uvec setdiff(uvec &a, uvec &b) {
 }
 
 List slice_sample(const uvec &ids, const uvec &trt, const double &prop=0.5) {
-  uvec trt_uniq = unique(trt);
+  uvec trt_uniq = sort(unique(trt));
   unsigned int ntrt = trt_uniq.n_elem;
   uvec ids_train, ids_est;
   for (unsigned int t = 0; t < ntrt; ++t) {
@@ -63,14 +63,15 @@ void set_seed(unsigned int seed) {
   set_seed_r(seed);  
 }
 
-// [[Rcpp::export]]
+// identify the optimal split given a subsample of training data
 List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
                    const double &lambda=0.5, const bool &ipw=true,
                    const unsigned int &nodesize=5) {
   Function Rquantile("quantile"); // call R's quantile within Rcpp
-  uvec trt_uniq = unique(trt);
+  uvec trt_uniq = sort(unique(trt));
   unsigned int ntrt = trt_uniq.n_elem;
   unsigned int nvar = X.n_cols;
+  // group ids, y, X, probs by trt
   vector<uvec> idx_trt; vector<vec> y_trt;
   vector<mat> X_trt; rowvec probs(ntrt);
   for (unsigned int t = 0; t < ntrt; ++t) {
@@ -80,23 +81,28 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
     probs(t) = mean(prob.elem(tmp));
     X_trt.push_back(X.rows(tmp));
   }
+  // for each covariate, record two values of optimal utility, an optimal cutoff,
+  // qualification status, and two optimal treatments
   mat utility(nvar, 2, fill::zeros); vec cutoffs_var(nvar, fill::zeros);
   uvec qualified(nvar); umat treatments(nvar, 2);
   if (ipw) {
     for (unsigned int i = 0; i < nvar; ++i) { // go through each covariate
       vec x_uniq = sort(unique(X.col(i))), cutoffs;
-      if (x_uniq.n_elem < 10) {
+      if (x_uniq.n_elem < 10) { // fewer than 10 unique values 
         cutoffs = x_uniq;
-        cutoffs(0) = mean(cutoffs.subvec(0,1));
-      } else {
-        // cutoffs = quantile(x_uniq, regspace(0.1,0.1,0.9));
+        // adjust the least cutoff to guarantee non-empty nodes
+        cutoffs(0) = mean(cutoffs.subvec(0,1)); 
+      } else { // at least 10 unique values 
+        // cutoffs = quantile(x_uniq, regspace(0.1,0.1,0.9)); // Armadillo
         cutoffs = as<vec>(Rquantile(x_uniq, regspace(0.1,0.1,0.9),
-                                    _["type"]=5));
+                                    _["type"]=5)); // R
       }
+      // for each cutoff, record two values of utility, two optimal treatments,
+      // and qualification status
       mat util(cutoffs.n_elem, 2); umat trts(cutoffs.n_elem, 2);
       uvec qual(cutoffs.n_elem);
-      for (unsigned int j = 0; j < cutoffs.n_elem; ++j) {
-        // go through each cutoff
+      for (unsigned int j = 0; j < cutoffs.n_elem; ++j) { // go thru each cutoff
+        // record numer, denom, and count for each treatment
         mat numer(ntrt,2), denom(ntrt,2); umat count(ntrt,2);
         for (unsigned int t = 0; t < ntrt; ++t) {
           vec ya = y_trt[t](find(X_trt[t].col(i)<cutoffs(j))); 
@@ -109,11 +115,13 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
         }
         mat regavg = 1 - denom;
         regavg.each_row() %= sum(numer)/sum(denom);
-        regavg += numer;
-        rowvec regavg_opt = max(regavg);
+        regavg += numer; // regularized avg outcomes
+        rowvec regavg_opt = max(regavg); // max regavg for each column
+        // record optimal treatments for both branches (may not be unique)
         uvec id0 = find(regavg.col(0)==regavg_opt(0) && count.col(0)!=0);
         uvec id1 = find(regavg.col(1)==regavg_opt(1) && count.col(1)!=0);
         uvec ids(2);
+        // pick a single optimal treatment for each branch
         for (unsigned int k = 0; k < id0.n_elem; ++k) {
           ids(0) = id0(k);
           for (unsigned int l = 0; l < id1.n_elem; ++l) {
@@ -125,18 +133,20 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
         trts(j,0) = trt_uniq(ids(0)); trts(j,1) = trt_uniq(ids(1));
         urowvec count_opt = {count(ids(0),0), count(ids(1),1)};
         rowvec prob_opt = probs(ids);
-        util.row(j) = regavg_opt % count_opt / prob_opt;
-        urowvec count_split = sum(count);
+        util.row(j) = regavg_opt % count_opt / prob_opt; // ipw adjusted
+        urowvec count_split = sum(count); // column sum
+        // check conditions 1 & 2 for recursive splitting
         qual(j) = static_cast<unsigned int>(min(count_split)>=nodesize &&
           min(sum(count!=0))>=2 && ids(0)!=ids(1));
       }
       uvec id_notqual = find(qual==0);
+      // drop cutoffs with unqualified splits
       util.shed_rows(id_notqual); cutoffs.shed_rows(id_notqual);
       trts.shed_rows(id_notqual);
-      if (util.n_rows==0) { // no qualified record for ith var
+      if (util.n_rows==0) { // no qualified record for ith covariate
         qualified(i) = 0;
       } else {
-        unsigned int id_max = index_max(sum(util, 1));
+        unsigned int id_max = index_max(sum(util, 1)); // find optimal cutoff
         utility.row(i) = util.row(id_max);
         treatments.row(i) = trts.row(id_max);
         cutoffs_var(i) = cutoffs(id_max);
@@ -145,7 +155,7 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
     }
   } else {
     for (unsigned int i = 0; i < nvar; ++i) { // go through each covariate
-      vec x_uniq = unique(X.col(i)), cutoffs;
+      vec x_uniq = sort(unique(X.col(i))), cutoffs;
       if (x_uniq.n_elem < 10) {
         cutoffs = x_uniq;
         cutoffs(0) = mean(cutoffs.subvec(0,1));
@@ -205,7 +215,7 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
       }
     }
   }
-  if (any(qualified)) {
+  if (any(qualified)) { // at least one covariate with qualified optimal split
     uvec ids = find(qualified==1);
     mat util_qualified = utility.rows(ids);
     umat trt_qualified = treatments.rows(ids);
@@ -230,6 +240,7 @@ mat growTree_cpp(const vec &y_trainest, const mat &X_trainest,
                  const double &epi=0.1, const bool &reg=true,
                  const bool &setseed=false, const unsigned int &seed=1) {
   if (setseed) set_seed(seed);
+  // analogous to slice_sample in dplyr: sampling within each treatment slice
   List list_ids = slice_sample(regspace<uvec>(0, X_trainest.n_rows-1),
                                trt_trainest, prop_train);
   const uvec ids_train = list_ids["ids_train"], ids_est = list_ids["ids_est"];
@@ -238,7 +249,7 @@ mat growTree_cpp(const vec &y_trainest, const mat &X_trainest,
   const mat X = X_trainest.rows(ids_train), X_est = X_trainest.rows(ids_est);
   // X: training matrix
   // utility at root
-  uvec trt_uniq = unique(trt);
+  uvec trt_uniq = sort(unique(trt));
   unsigned int ntrt = trt_uniq.n_elem;
   vec numer(ntrt), denom(ntrt), probs(ntrt);
   uvec count(ntrt);
@@ -262,37 +273,38 @@ mat growTree_cpp(const vec &y_trainest, const mat &X_trainest,
   }
   // grow tree
   IntegerVector parentnode = {0}, node = {1};
-  set<unsigned int> nodes2split; nodes2split.insert(1);
+  set<unsigned int> nodes2split; nodes2split.insert(1); // start from root node
   // filter records the row indices of X
   vector<uvec> filter;
-  filter.push_back(regspace<uvec>(0, X.n_rows-1));
+  filter.push_back(regspace<uvec>(0, X.n_rows-1)); // all rows of training data
   vector<uvec> filter_est;
-  filter_est.push_back(regspace<uvec>(0, X_est.n_rows-1));
+  filter_est.push_back(regspace<uvec>(0, X_est.n_rows-1)); // all rows of est data
   vector<uvec> filter_val;
-  filter_val.push_back(regspace<uvec>(0, X_val.n_rows-1));
-  CharacterVector type = {"split"};
-  NumericVector util = {util_root};
+  filter_val.push_back(regspace<uvec>(0, X_val.n_rows-1)); // all rows of val data
+  CharacterVector type = {"split"}; // start from root node as split
+  NumericVector util = {util_root}; // util at root node
   vector<unsigned int> vars; vector<double> cutoffs;
   // push-backs below are for root node only
-  vars.push_back(X.n_cols); cutoffs.push_back(0.0);
+  vars.push_back(X.n_cols); cutoffs.push_back(0.0); // X.n_cols larger than any index
   double mingain = epi*stddev(y);
   do {
     set<unsigned int> nodes2split_tmp = nodes2split;
     for (set<unsigned int>::iterator i=nodes2split_tmp.begin();
          i!=nodes2split_tmp.end(); ++i) {
       unsigned int node2split = *i;
-      uvec ids = filter[node2split-1];
+      uvec ids = filter[node2split-1]; // zero-index in C++
       uvec ids_est = filter_est[node2split-1];
       uvec ids_val = filter_val[node2split-1];
-      uvec trt_tmp = trt(ids);
+      uvec trt_tmp = trt(ids); // trt column of the subsample
       uvec trt_sub = Rcpp::RcppArmadillo::sample(trt_uniq, ntrts, false);
       uvec var_sub = Rcpp::RcppArmadillo::sample(regspace<uvec>(0, X.n_cols-1),
                                                  nvars, false);
-      uvec ids4split = ids(index_subset(trt_tmp, trt_sub));
+      // ids only with selected treatment levels
+      uvec ids4split = ids(index_subset(trt_tmp, trt_sub)); 
       List split; int var_id;
-      if (ids4split.n_elem==0) { // trt_tmp and trt_sub are disjoint
-        var_id = -1;
-      } else { 
+      if (ids4split.n_elem==0) { // trt_tmp and trt_sub are disjoint--nothing to split
+        var_id = -1; 
+      } else { // ids4split is nonempty
         split = splitting_cpp(y(ids4split), X.submat(ids4split, var_sub),
                               trt(ids4split), prob(ids4split),
                               lambda, ipw, nodesize);
@@ -300,43 +312,52 @@ mat growTree_cpp(const vec &y_trainest, const mat &X_trainest,
       }
       if (var_id==-1) { // split is null
         type[node2split-1] = "leaf";
-        nodes2split.erase(node2split);
+        nodes2split.erase(node2split); // split unavailable; drop the node
       } else {
         rowvec utils_split = split["util"];
-        if (accu(utils_split) - util[node2split-1] < mingain) {
+        if (accu(utils_split) - util[node2split-1] < mingain) { // no welfare gain
           type[node2split-1] = "leaf";
-          nodes2split.erase(node2split);
-        } else {
-          unsigned int var = var_sub(static_cast<unsigned int>(var_id));
+          nodes2split.erase(node2split); // split is not beneficial; drop the node
+        } else { // with welfare gain
+          unsigned int var = var_sub(static_cast<unsigned int>(var_id)); // var for splitting
           double cutoff = split["cutoff"];
           if (newsplit(vars, cutoffs, var, cutoff)) { // new split
-            parentnode.push_back(node2split); parentnode.push_back(node2split);
-            nodes2split.insert(max(node)+1); node.push_back(max(node)+1);
-            nodes2split.insert(max(node)+1); node.push_back(max(node)+1);
             uvec var_tmp(1); var_tmp.fill(var);
-            filter.push_back(ids(find(X(ids,var_tmp).as_col()<cutoff)));
-            filter.push_back(ids(find(X(ids,var_tmp).as_col()>=cutoff)));
-            filter_est.push_back(ids_est(find(X_est(ids_est,var_tmp).as_col()<cutoff)));
-            filter_est.push_back(ids_est(find(X_est(ids_est,var_tmp).as_col()>=cutoff)));
-            filter_val.push_back(ids_val(find(X_val(ids_val,var_tmp).as_col()<cutoff)));
-            filter_val.push_back(ids_val(find(X_val(ids_val,var_tmp).as_col()>=cutoff)));
-            type[node2split-1] = "parent";
-            nodes2split.erase(node2split);
-            type.push_back("split"); type.push_back("split");
-            util.push_back(utils_split(0)); util.push_back(utils_split(1));
+            uvec ids_est_left = ids_est(find(X_est(ids_est,var_tmp).as_col()<cutoff));
+            uvec ids_est_right = ids_est(find(X_est(ids_est,var_tmp).as_col()>=cutoff));
+            uvec ids_val_left = ids_val(find(X_val(ids_val,var_tmp).as_col()<cutoff));
+            uvec ids_val_right = ids_val(find(X_val(ids_val,var_tmp).as_col()>=cutoff));
+            if (ids_est_left.n_elem==0 || ids_est_right.n_elem==0 ||
+                ids_val_left.n_elem==0 || ids_val_right.n_elem==0) {  
+              // split leads to empty branch for est or val data
+              type[node2split-1] = "leaf";
+              nodes2split.erase(node2split); // drop split leading to empty branch
+            } else {
+              filter_est.push_back(ids_est_left); filter_est.push_back(ids_est_right);
+              filter_val.push_back(ids_val_left); filter_val.push_back(ids_val_right);
+              filter.push_back(ids(find(X(ids,var_tmp).as_col()<cutoff)));
+              filter.push_back(ids(find(X(ids,var_tmp).as_col()>=cutoff)));
+              parentnode.push_back(node2split); parentnode.push_back(node2split);
+              nodes2split.insert(max(node)+1); node.push_back(max(node)+1);
+              nodes2split.insert(max(node)+1); node.push_back(max(node)+1);
+              type[node2split-1] = "parent";
+              nodes2split.erase(node2split);
+              type.push_back("split"); type.push_back("split");
+              util.push_back(utils_split(0)); util.push_back(utils_split(1));
+            }
           } else {
             type[node2split-1] = "leaf";
-            nodes2split.erase(node2split);
+            nodes2split.erase(node2split); // drop old split
           }
         }
       }
     }
-  } while (nodes2split.size() > 0); // at least 1 node to split
+  } while (nodes2split.size() > 0); // at least 1 node to split; if not, stop growing
   for (unsigned int i = 0; i < type.size(); ++i) {
     if (type[i]=="leaf") {
       filter_est.insert(filter_est.begin()+i, ids_est(filter_est[i]));
       filter_est.erase(filter_est.begin()+i+1);
-    } else {
+    } else { // drop nonterminal nodes
       type.erase(i);
       filter_est.erase(filter_est.begin()+i);
       filter_val.erase(filter_val.begin()+i);
@@ -344,28 +365,29 @@ mat growTree_cpp(const vec &y_trainest, const mat &X_trainest,
     }
   }
   mat mat_ret;
-  if (reg) {
-    uvec trts_uniq = unique(trt_trainest);
+  if (reg) { // regularized final outcomes
+    uvec trts_uniq = sort(unique(trt_trainest));
     mat_ret.zeros(X_val.n_rows, trts_uniq.n_elem);
-    for (unsigned int i = 0; i < type.size(); ++i) {
-      uvec trt_tmp = trt_trainest(filter_est[i]);
+    for (unsigned int i = 0; i < type.size(); ++i) { // go thru each terminal node
+      uvec trt_tmp = trt_trainest(filter_est[i]); // subvector of trt column
+      vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
       urowvec count(trts_uniq.n_elem);
-      vec y_tmp = y_trainest(filter_est[i]);
       rowvec numer(trts_uniq.n_elem), denom(trts_uniq.n_elem);
       for (unsigned int t = 0; t < trts_uniq.n_elem; ++t) {
         uvec id_tmp = find(trt_tmp==trts_uniq(t));
-        if (id_tmp.n_elem==0) {
+        if (id_tmp.n_elem==0) { // one trt level missing
           count(t) = 0; numer(t) = 0; denom(t) = 0;
         } else {
           numer(t) = accu(y_tmp(id_tmp))/(id_tmp.n_elem+lambda);
           denom(t) = id_tmp.n_elem/(id_tmp.n_elem+lambda);
         }
       }
-      rowvec regavg = 1 - denom; regavg *= sum(numer)/sum(denom);
+      rowvec regavg = 1 - denom; regavg *= accu(numer)/accu(denom);
       regavg += numer;
+      // assign regavg to units of val data belonging to the terminal node
       mat_ret.rows(filter_val[i]) += repmat(regavg, filter_val[i].n_elem, 1);
     }
-  } else {
+  } else { // unregularized final outcomes
     mat_ret.zeros(X_val.n_rows, X_trainest.n_rows);
     for (unsigned int i = 0; i < type.size(); ++i) {
       mat_ret(filter_val[i], filter_est[i]) += 1.0/filter_est[i].n_elem;
@@ -386,7 +408,7 @@ List growForest_cpp(const vec &y_trainest, const mat &X_trainest,
                     const bool &reg=true, const bool &setseed=false,
                     const unsigned int &seed=1) {
   if (setseed) set_seed(seed);
-  uvec trt_uniq = unique(trt_trainest);
+  uvec trt_uniq = sort(unique(trt_trainest));
   unsigned int ntrt = trt_uniq.n_elem;
   mat outcome(X_val.n_rows, ntrt, fill::zeros);
   if (reg) {
@@ -406,14 +428,15 @@ List growForest_cpp(const vec &y_trainest, const mat &X_trainest,
     mat_wt /= ntree;
     for (unsigned int t = 0; t < ntrt; ++t) {
       uvec tmp = find(trt_trainest==trt_uniq(t));
+      // weighted outcomes based on trainest data
       outcome.col(t) = mat_wt.cols(tmp)*y_trainest(tmp)/sum(mat_wt.cols(tmp),1);
     }
   }
+  // identify optimal trt idx for each unit in val data
   uvec idx_trt = index_max(outcome, 1);
   uvec trt_pred(idx_trt.n_elem, fill::zeros);
   for (unsigned int t = 0; t < ntrt; ++t) {
     trt_pred(find(idx_trt==t)) += trt_uniq(t);
   }
-  return List::create(_["Y.pred"]=max(outcome, 1),
-                      _["trt.dof"]=trt_pred);
+  return List::create(_["Y.pred"]=max(outcome, 1), _["trt.dof"]=trt_pred);
 }
