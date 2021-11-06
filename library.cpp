@@ -95,7 +95,7 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
       } else { // at least 10 unique values 
         // cutoffs = quantile(x_uniq, regspace(0.1,0.1,0.9)); // Armadillo
         cutoffs = as<vec>(Rquantile(x_uniq, regspace(0.1,0.1,0.9),
-                                    _["type"]=5)); // R
+                                    _["type"]=7)); // R
       }
       // for each cutoff, record two values of utility, two optimal treatments,
       // and qualification status
@@ -162,7 +162,7 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
       } else {
         // cutoffs = quantile(x_uniq, regspace(0.1,0.1,0.9));
         cutoffs = as<vec>(Rquantile(x_uniq, regspace(0.1,0.1,0.9),
-                                    _["type"]=5));
+                                    _["type"]=7));
       }
       mat util(cutoffs.n_elem, 2);
       umat trts(cutoffs.n_elem, 2);
@@ -303,7 +303,7 @@ mat growTree_cpp(const vec &y_trainest, const mat &X_trainest,
       uvec ids4split = ids(index_subset(trt_tmp, trt_sub)); 
       List split; int var_id;
       if (ids4split.n_elem==0) { // trt_tmp and trt_sub are disjoint--nothing to split
-        var_id = -1; 
+        var_id = -1;
       } else { // ids4split is nonempty
         split = splitting_cpp(y(ids4split), X.submat(ids4split, var_sub),
                               trt(ids4split), prob(ids4split),
@@ -344,6 +344,8 @@ mat growTree_cpp(const vec &y_trainest, const mat &X_trainest,
               nodes2split.erase(node2split);
               type.push_back("split"); type.push_back("split");
               util.push_back(utils_split(0)); util.push_back(utils_split(1));
+              vars.push_back(var);
+              cutoffs.push_back(cutoff);
             }
           } else {
             type[node2split-1] = "leaf";
