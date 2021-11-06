@@ -162,25 +162,25 @@ growTree <- function(data.trainest, data.validation, y, id, trt, vars, prob,
 }
 
 growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
-                       ntrt=5, nvar=3, lambda=0.5, ipw=TRUE, nodesize=5,
-                       ntree=1000, prop.train=0.5, epi=0.1, resid=TRUE,
-                       parallel=FALSE, threads=parallel::detectCores()/2,
-                       Rcpp=TRUE, setseed=FALSE, seed=1, reg=TRUE) {
+                       ntrt=5, nvar=3, lambda1=0.5, lambda2=0.5, ipw=TRUE,
+                       nodesize=5, ntree=1000, prop.train=0.5, epi=0.1,
+                       resid=TRUE, parallel=FALSE,
+                       threads=parallel::detectCores()/2, Rcpp=TRUE, reg=TRUE,
+                       simpleavg=FALSE, setseed=FALSE, seed=1) {
   trts <- unique(pull(data.trainest, trt))
   data.trainest <- mutate(data.trainest, across(c(id, trt), as.character))
   data.validation <- mutate(data.validation, across(c(id, trt), as.character))
-  if (all(!paste0(y, trts) %in% names(data.validation)))
-    stop("Incomplete treatment-specific outcomes for data.validation!")
   if (resid) data.trainest <- residualize(data.trainest, y, vars)
   if (Rcpp) {
-    ls.forest <- 
-      growForest_cpp(pull(data.trainest, y), 
+    ls.forest <-
+      growForest_cpp(pull(data.trainest, y),
                      as.matrix(select(data.trainest, all_of(vars))),
-                     as.integer(factor(pull(data.trainest, trt), trts)),
+                     as.integer(factor(pull(data.trainest, trt),
+                                       as.character(trts))),
                      pull(data.trainest, prob),
                      as.matrix(select(data.validation, all_of(vars))),
-                     ntrt, nvar, lambda, ipw, nodesize, ntree,
-                     prop.train, epi, reg, setseed, seed)
+                     ntrt, nvar, lambda1, lambda2, ipw, nodesize, ntree,
+                     prop.train, epi, reg, simpleavg, setseed, seed)
     res <- tibble(!!(id):=as.character(pull(data.validation, id)),
                   !!(trt):=as.character(trts[ls.forest$trt.dof]),
                   !!(paste0(y, ".pred")):=as.numeric(ls.forest$Y.pred))
@@ -199,7 +199,7 @@ growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                     formalArgs(growTree)),
           .packages=c("tibble","dplyr","stringr","tidyr", "readr")) %dopar% {
             growTree(data.trainest, data.validation, y, id, trt, vars, prob, ntrt,
-                     nvar, lambda, ipw, nodesize, prop.train, epi)$mat
+                     nvar, lambda1, ipw, nodesize, prop.train, epi)$mat
           }
         Reduce("+",ls.mat)}))
       parallel::stopCluster(cl)
@@ -210,7 +210,7 @@ growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
       invisible(sapply(1:ntree, function(i) {
         mat.weight <<-
           growTree(data.trainest, data.validation, y, id, trt, vars, prob, ntrt,
-                   nvar, lambda, ipw, nodesize, prop.train, epi)$mat + mat.weight
+                   nvar, lambda1, ipw, nodesize, prop.train, epi)$mat + mat.weight
       }))
     }
     mat.weight <- mat.weight / ntree
@@ -226,12 +226,14 @@ growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
         cols=-all_of(id), names_to=trt, values_to=y),!!sym(id)),
       !!trt:=(!!sym(trt))[!!sym(y)==max(!!sym(y))],
       !!(paste0(y, ".pred")):=max(!!sym(y)), .groups="drop")
-  }  
-  res <- rename_with(inner_join(res, mutate(pivot_longer(
-    dplyr::select(data.validation, all_of(c(id, paste0(y, trts)))),
-    cols=paste0(y, trts), names_to=trt, names_prefix=y, values_to=y),
-    across(c(id, trt), as.character)),
-    by=c(id, trt)), ~str_c(.,".dof"), all_of(c(y, trt)))
+  }
+  if (all(paste0(y, trts) %in% names(data.validation))) {
+    res <- rename_with(inner_join(res, mutate(pivot_longer(
+      dplyr::select(data.validation, all_of(c(id, paste0(y, trts)))),
+      cols=paste0(y, trts), names_to=trt, names_prefix=y, values_to=y),
+      across(c(id, trt), as.character)),
+      by=c(id, trt)), ~str_c(.,".dof"), all_of(c(y, trt)))
+  }
   return(res)
 }
 
