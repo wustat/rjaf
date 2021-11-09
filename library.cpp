@@ -373,12 +373,11 @@ mat growTree_simpleavg(const vec &y_trainest, const mat &X_trainest,
     for (unsigned int i = 0; i < type.size(); ++i) { // go thru each terminal node
       uvec trt_tmp = trt_trainest(filter_est[i]); // subvector of trt column
       vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
-      urowvec count(trts_uniq.n_elem);
       rowvec numer(trts_uniq.n_elem), denom(trts_uniq.n_elem);
       for (unsigned int t = 0; t < trts_uniq.n_elem; ++t) {
         uvec id_tmp = find(trt_tmp==trts_uniq(t));
         if (id_tmp.n_elem==0) { // one trt level missing
-          count(t) = 0; numer(t) = 0; denom(t) = 0;
+          numer(t) = 0; denom(t) = 0;
         } else {
           numer(t) = accu(y_tmp(id_tmp))/(id_tmp.n_elem+lambda2);
           denom(t) = id_tmp.n_elem/(id_tmp.n_elem+lambda2);
@@ -549,6 +548,7 @@ List growTree_wtavg(const vec &y_trainest, const mat &X_trainest,
         if (id_tmp.n_elem==0) { // one trt level missing
           count(t) = 0; numer(t) = 0; denom(t) = 0;
         } else {
+          count(t) = id_tmp.n_elem;
           numer(t) = accu(y_tmp(id_tmp))/(id_tmp.n_elem+lambda2);
           denom(t) = id_tmp.n_elem/(id_tmp.n_elem+lambda2);
         }
