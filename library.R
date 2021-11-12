@@ -166,7 +166,7 @@ growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                        nodesize=5, ntree=1000, prop.train=0.5, epi=0.1,
                        resid=TRUE, parallel=FALSE,
                        threads=parallel::detectCores()/2, Rcpp=TRUE, reg=TRUE,
-                       simpleavg=FALSE, setseed=FALSE, seed=1) {
+                       impute=TRUE, setseed=FALSE, seed=1) {
   trts <- unique(pull(data.trainest, trt))
   data.trainest <- mutate(data.trainest, across(c(id, trt), as.character))
   data.validation <- mutate(data.validation, across(c(id, trt), as.character))
@@ -180,7 +180,7 @@ growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                      pull(data.trainest, prob),
                      as.matrix(select(data.validation, all_of(vars))),
                      ntrt, nvar, lambda1, lambda2, ipw, nodesize, ntree,
-                     prop.train, epi, reg, simpleavg, setseed, seed)
+                     prop.train, epi, reg, impute, setseed, seed)
     res <- tibble(!!(id):=as.character(pull(data.validation, id)),
                   !!(trt):=as.character(trts[ls.forest$trt.dof]),
                   !!(paste0(y, ".pred")):=as.numeric(ls.forest$Y.pred))

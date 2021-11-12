@@ -231,173 +231,6 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
 }
 
 // [[Rcpp::export]]
-mat growTree_simpleavg(const vec &y_trainest, const mat &X_trainest,
-                       const uvec &trt_trainest, const vec &prob_trainest,
-                       const mat &X_val, const unsigned int &ntrts=5,
-                       const unsigned int &nvars=3, const double &lambda1=0.5,
-                       const double &lambda2=0.5, const bool &ipw=true,
-                       const unsigned int &nodesize=5, const double &prop_train=0.5,
-                       const double &epi=0.1, const bool &reg=true,
-                       const bool &setseed=false, const unsigned int &seed=1) {
-  if (setseed) set_seed(seed);
-  // analogous to slice_sample in dplyr: sampling within each treatment slice
-  List list_ids = slice_sample(regspace<uvec>(0, X_trainest.n_rows-1),
-                               trt_trainest, prop_train);
-  const uvec ids_train = list_ids["ids_train"], ids_est = list_ids["ids_est"];
-  const uvec trt = trt_trainest(ids_train);
-  const vec y = y_trainest(ids_train), prob = prob_trainest(ids_train);
-  const mat X = X_trainest.rows(ids_train), X_est = X_trainest.rows(ids_est);
-  // X: training matrix
-  // utility at root
-  uvec trt_uniq = sort(unique(trt));
-  unsigned int ntrt = trt_uniq.n_elem;
-  vec numer(ntrt), denom(ntrt), probs(ntrt);
-  uvec count(ntrt);
-  for (unsigned int t = 0; t < ntrt; ++t) {
-    uvec tmp = find(trt==trt_uniq(t));
-    vec y_trt = y(tmp);
-    count(t) = y_trt.n_elem;
-    probs(t) = mean(prob(tmp));
-    numer(t) = accu(y_trt)/(y_trt.n_elem+lambda1);
-    denom(t) = y_trt.n_elem/(y_trt.n_elem+lambda1);
-  }
-  vec regavg = 1 - denom;
-  regavg *= accu(numer)/accu(denom);
-  regavg += numer;
-  unsigned int id = index_max(regavg);
-  double util_root;
-  if (ipw) {
-    util_root = max(regavg)*count(id)/probs(id);
-  } else {
-    util_root = max(regavg)*accu(count);
-  }
-  // grow tree
-  IntegerVector parentnode = {0}, node = {1};
-  set<unsigned int> nodes2split; nodes2split.insert(1); // start from root node
-  // filter records the row indices of X
-  vector<uvec> filter;
-  filter.push_back(regspace<uvec>(0, X.n_rows-1)); // all rows of training data
-  vector<uvec> filter_est;
-  filter_est.push_back(regspace<uvec>(0, X_est.n_rows-1)); // all rows of est data
-  vector<uvec> filter_val;
-  filter_val.push_back(regspace<uvec>(0, X_val.n_rows-1)); // all rows of val data
-  CharacterVector type = {"split"}; // start from root node as split
-  NumericVector util = {util_root}; // util at root node
-  vector<unsigned int> vars; vector<double> cutoffs;
-  // push-backs below are for root node only
-  vars.push_back(X.n_cols); cutoffs.push_back(0.0); // X.n_cols larger than any index
-  double mingain = epi*stddev(y);
-  do {
-    set<unsigned int> nodes2split_tmp = nodes2split;
-    for (set<unsigned int>::iterator i=nodes2split_tmp.begin();
-         i!=nodes2split_tmp.end(); ++i) {
-      unsigned int node2split = *i;
-      uvec ids = filter[node2split-1]; // zero-index in C++
-      uvec ids_est = filter_est[node2split-1];
-      uvec ids_val = filter_val[node2split-1];
-      uvec trt_tmp = trt(ids); // trt column of the subsample
-      uvec trt_sub = Rcpp::RcppArmadillo::sample(trt_uniq, ntrts, false);
-      uvec var_sub = Rcpp::RcppArmadillo::sample(regspace<uvec>(0, X.n_cols-1),
-                                                 nvars, false);
-      // ids only with selected treatment levels
-      uvec ids4split = ids(index_subset(trt_tmp, trt_sub)); 
-      List split; int var_id;
-      if (ids4split.n_elem==0) { // trt_tmp and trt_sub are disjoint--nothing to split
-        var_id = -1; 
-      } else { // ids4split is nonempty
-        split = splitting_cpp(y(ids4split), X.submat(ids4split, var_sub),
-                              trt(ids4split), prob(ids4split),
-                              lambda1, ipw, nodesize);
-        var_id = split["var"];
-      }
-      if (var_id==-1) { // split is null
-        type[node2split-1] = "leaf";
-        nodes2split.erase(node2split); // split unavailable; drop the node
-      } else {
-        rowvec utils_split = split["util"];
-        if (accu(utils_split) - util[node2split-1] < mingain) { // no welfare gain
-          type[node2split-1] = "leaf";
-          nodes2split.erase(node2split); // split is not beneficial; drop the node
-        } else { // with welfare gain
-          unsigned int var = var_sub(static_cast<unsigned int>(var_id)); // var for splitting
-          double cutoff = split["cutoff"];
-          if (newsplit(vars, cutoffs, var, cutoff)) { // new split
-            uvec var_tmp(1); var_tmp.fill(var);
-            uvec ids_est_left = ids_est(find(X_est(ids_est,var_tmp).as_col()<cutoff));
-            uvec ids_est_right = ids_est(find(X_est(ids_est,var_tmp).as_col()>=cutoff));
-            uvec ids_val_left = ids_val(find(X_val(ids_val,var_tmp).as_col()<cutoff));
-            uvec ids_val_right = ids_val(find(X_val(ids_val,var_tmp).as_col()>=cutoff));
-            if (ids_est_left.n_elem==0 || ids_est_right.n_elem==0 ||
-                ids_val_left.n_elem==0 || ids_val_right.n_elem==0) {  
-              // split leads to empty branch for est or val data
-              type[node2split-1] = "leaf";
-              nodes2split.erase(node2split); // drop split leading to empty branch
-            } else {
-              filter_est.push_back(ids_est_left); filter_est.push_back(ids_est_right);
-              filter_val.push_back(ids_val_left); filter_val.push_back(ids_val_right);
-              filter.push_back(ids(find(X(ids,var_tmp).as_col()<cutoff)));
-              filter.push_back(ids(find(X(ids,var_tmp).as_col()>=cutoff)));
-              parentnode.push_back(node2split); parentnode.push_back(node2split);
-              nodes2split.insert(max(node)+1); node.push_back(max(node)+1);
-              nodes2split.insert(max(node)+1); node.push_back(max(node)+1);
-              type[node2split-1] = "parent";
-              nodes2split.erase(node2split);
-              type.push_back("split"); type.push_back("split");
-              util.push_back(utils_split(0)); util.push_back(utils_split(1));
-              vars.push_back(var);
-              cutoffs.push_back(cutoff);
-            }
-          } else {
-            type[node2split-1] = "leaf";
-            nodes2split.erase(node2split); // drop old split
-          }
-        }
-      }
-    }
-  } while (nodes2split.size() > 0); // at least 1 node to split; if not, stop growing
-  for (unsigned int i = 0; i < type.size(); ++i) {
-    if (type[i]=="leaf") {
-      filter_est.insert(filter_est.begin()+i, ids_est(filter_est[i]));
-      filter_est.erase(filter_est.begin()+i+1);
-    } else { // drop nonterminal nodes
-      type.erase(i);
-      filter_est.erase(filter_est.begin()+i);
-      filter_val.erase(filter_val.begin()+i);
-      --i;
-    }
-  }
-  mat mat_res;
-  if (reg) { // regularized final outcomes
-    uvec trts_uniq = sort(unique(trt_trainest));
-    mat_res.zeros(X_val.n_rows, trts_uniq.n_elem);
-    for (unsigned int i = 0; i < type.size(); ++i) { // go thru each terminal node
-      uvec trt_tmp = trt_trainest(filter_est[i]); // subvector of trt column
-      vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
-      rowvec numer(trts_uniq.n_elem), denom(trts_uniq.n_elem);
-      for (unsigned int t = 0; t < trts_uniq.n_elem; ++t) {
-        uvec id_tmp = find(trt_tmp==trts_uniq(t));
-        if (id_tmp.n_elem==0) { // one trt level missing
-          numer(t) = 0; denom(t) = 0;
-        } else {
-          numer(t) = accu(y_tmp(id_tmp))/(id_tmp.n_elem+lambda2);
-          denom(t) = id_tmp.n_elem/(id_tmp.n_elem+lambda2);
-        }
-      }
-      rowvec regavg = 1 - denom; regavg *= accu(numer)/accu(denom);
-      regavg += numer;
-      // assign regavg to units of val data belonging to the terminal node
-      mat_res.rows(filter_val[i]) += repmat(regavg, filter_val[i].n_elem, 1);
-    }
-  } else { // unregularized final outcomes
-    mat_res.zeros(X_val.n_rows, X_trainest.n_rows);
-    for (unsigned int i = 0; i < type.size(); ++i) {
-      mat_res(filter_val[i], filter_est[i]) += 1.0/filter_est[i].n_elem;
-    }
-  }
-  return mat_res;
-}
-
-// [[Rcpp::export]]
 List growTree_wtavg(const vec &y_trainest, const mat &X_trainest,
                     const uvec &trt_trainest, const vec &prob_trainest,
                     const mat &X_val, const unsigned int &ntrts=5,
@@ -405,6 +238,7 @@ List growTree_wtavg(const vec &y_trainest, const mat &X_trainest,
                     const double &lambda2=0.5, const bool &ipw=true,
                     const unsigned int &nodesize=5, const double &prop_train=0.5,
                     const double &epi=0.1, const bool &reg=true,
+                    const bool &impute=true,
                     const bool &setseed=false, const unsigned int &seed=1) {
   if (setseed) set_seed(seed);
   // analogous to slice_sample in dplyr: sampling within each treatment slice
@@ -555,8 +389,10 @@ List growTree_wtavg(const vec &y_trainest, const mat &X_trainest,
       }
       rowvec regavg = 1 - denom; regavg *= accu(numer)/accu(denom);
       regavg += numer;
-      for (unsigned int t = 0; t < trts_uniq.n_elem; ++t) {
-        if (count(t)==0) regavg(t) = 0;
+      if (!impute) {
+        for (unsigned int t = 0; t < trts_uniq.n_elem; ++t) {
+          if (count(t)==0) regavg(t) = 0;
+        }
       }
       rowvec regwt(regavg.n_elem, fill::zeros);
       regwt(find(count)) += 1.0;
@@ -565,11 +401,28 @@ List growTree_wtavg(const vec &y_trainest, const mat &X_trainest,
       mat_ct.rows(filter_val[i]) += repmat(regwt, filter_val[i].n_elem, 1);
     }
   } else {
-    mat_res.zeros(X_val.n_rows, X_trainest.n_rows);
-    mat_ct.zeros(X_val.n_rows, X_trainest.n_rows);
-    for (unsigned int i = 0; i < type.size(); ++i) {
-      mat_res(filter_val[i], filter_est[i]) += 1.0/filter_est[i].n_elem;
-      mat_ct(filter_val[i], filter_est[i]) += 1.0;
+    uvec trts_uniq = sort(unique(trt_trainest));
+    mat_res.zeros(X_val.n_rows, trts_uniq.n_elem);
+    mat_ct.zeros(X_val.n_rows, trts_uniq.n_elem);
+    for (unsigned int i = 0; i < type.size(); ++i) { // go thru each terminal node
+      uvec trt_tmp = trt_trainest(filter_est[i]); // subvector of trt column
+      vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
+      urowvec count(trts_uniq.n_elem);
+      rowvec avg(trts_uniq.n_elem);
+      for (unsigned int t = 0; t < trts_uniq.n_elem; ++t) {
+        uvec id_tmp = find(trt_tmp==trts_uniq(t));
+        if (id_tmp.n_elem==0) { // one trt level missing
+          count(t) = 0; avg(t) = 0;
+        } else {
+          count(t) = id_tmp.n_elem;
+          avg(t) = mean(y_tmp(id_tmp));
+        }
+      }
+      rowvec wt(regavg.n_elem, fill::zeros);
+      wt(find(count)) += 1.0;
+      // assign avg to units of val data belonging to the terminal node
+      mat_res.rows(filter_val[i]) += repmat(avg, filter_val[i].n_elem, 1);
+      mat_ct.rows(filter_val[i]) += repmat(wt, filter_val[i].n_elem, 1);
     }
   }
   return List::create(_["res"]=mat_res, _["ct"]=mat_ct);
@@ -584,67 +437,24 @@ List growForest_cpp(const vec &y_trainest, const mat &X_trainest,
                     const bool &ipw=true, const unsigned int &nodesize=5,
                     const unsigned int &ntree=1000,
                     const double &prop_train=0.5, const double &epi=0.1,
-                    const bool &reg=true, const bool &simpleavg=false,
-                    const bool &setseed=false, const unsigned int &seed=1) {
+                    const bool &reg=true, const bool &impute=true,
+                    const bool &setseed=false,
+                    const unsigned int &seed=1) {
   if (setseed) set_seed(seed);
   uvec trt_uniq = sort(unique(trt_trainest));
   unsigned int ntrt = trt_uniq.n_elem;
-  mat outcome(X_val.n_rows, ntrt, fill::zeros);
-  if (simpleavg) {
-    if (reg) {
-      for (unsigned int i = 0; i < ntree; ++i) {
-        outcome += growTree_simpleavg(y_trainest, X_trainest, trt_trainest,
-                                      prob_trainest, X_val, ntrts, nvars, lambda1,
-                                      lambda2, ipw, nodesize, prop_train, epi, reg);
-      }
-      outcome /= ntree;
-    } else {
-      mat mat_ct(X_val.n_rows, X_trainest.n_rows, fill::zeros);
-      for (unsigned int i = 0; i < ntree; ++i) {
-        mat_ct += growTree_simpleavg(y_trainest, X_trainest, trt_trainest,
-                                     prob_trainest, X_val, ntrts, nvars, lambda1,
-                                     lambda2, ipw, nodesize, prop_train, epi, reg);
-      }
-      mat_ct /= ntree;
-      for (unsigned int t = 0; t < ntrt; ++t) {
-        uvec tmp = find(trt_trainest==trt_uniq(t));
-        // weighted outcomes based on trainest data
-        outcome.col(t) = mat_ct.cols(tmp)*y_trainest(tmp)/sum(mat_ct.cols(tmp),1);
-      }
-    }
-  } else {
-    if (reg) {
-      mat ct(X_val.n_rows, ntrt, fill::zeros);
-      for (unsigned int i = 0; i < ntree; ++i) {
-        List tree_tmp = growTree_wtavg(y_trainest, X_trainest, trt_trainest,
-                                       prob_trainest, X_val, ntrts, nvars, lambda1,
-                                       lambda2, ipw, nodesize, prop_train, epi, reg);
-        mat outcome_tmp = tree_tmp["res"], ct_tmp = tree_tmp["ct"];
-        outcome += outcome_tmp;
-        ct += ct_tmp;
-      }
-      ct.replace(0.0, 1.0);
-      outcome /= ct;
-    } else {
-      mat mat_ct(X_val.n_rows, X_trainest.n_rows, fill::zeros);
-      mat ct(X_val.n_rows, X_trainest.n_rows, fill::zeros);
-      for (unsigned int i = 0; i < ntree; ++i) {
-        List tree_tmp = growTree_wtavg(y_trainest, X_trainest, trt_trainest,
-                                       prob_trainest, X_val, ntrts, nvars, lambda1,
-                                       lambda2, ipw, nodesize, prop_train, epi, reg);
-        mat outcome_tmp = tree_tmp["res"], ct_tmp = tree_tmp["ct"];
-        mat_ct += outcome_tmp;
-        ct += ct_tmp;
-      }
-      ct.replace(0.0, 1.0);
-      mat_ct /= ct;
-      for (unsigned int t = 0; t < ntrt; ++t) {
-        uvec tmp = find(trt_trainest==trt_uniq(t));
-        // weighted outcomes based on trainest data
-        outcome.col(t) = mat_ct.cols(tmp)*y_trainest(tmp)/sum(mat_ct.cols(tmp),1);
-      }
-    }
+  mat outcome(X_val.n_rows, ntrt, fill::zeros), ct(X_val.n_rows, ntrt, fill::zeros);
+  for (unsigned int i = 0; i < ntree; ++i) {
+    List tree_tmp = growTree_wtavg(y_trainest, X_trainest, trt_trainest,
+                                   prob_trainest, X_val, ntrts, nvars, lambda1,
+                                   lambda2, ipw, nodesize, prop_train, epi,
+                                   reg, impute);
+    mat outcome_tmp = tree_tmp["res"], ct_tmp = tree_tmp["ct"];
+    outcome += outcome_tmp;
+    ct += ct_tmp;
   }
+  ct.replace(0.0, 1.0);
+  outcome /= ct;
   // identify optimal trt idx for each unit in val data
   uvec idx_trt = index_max(outcome, 1);
   uvec trt_pred(idx_trt.n_elem, fill::zeros);
