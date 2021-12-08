@@ -1,9 +1,9 @@
 #define ARMA_NO_DEBUG
 // #define ARMA_DONT_USE_OPENMP
-#define STRICT_R_HEADERS // needed on Windows, not macOS
-#include <RcppArmadillo.h>
-#include <RcppArmadilloExtensions/sample.h> // for Rcpp::RcppArmadillo::sample
-// [[Rcpp::depends(RcppArmadillo)]]
+  #define STRICT_R_HEADERS // needed on Windows, not macOS
+  #include <RcppArmadillo.h>
+  #include <RcppArmadilloExtensions/sample.h> // for Rcpp::RcppArmadillo::sample
+  // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp11)]]
 
 using namespace Rcpp;
@@ -11,14 +11,14 @@ using namespace arma;
 using namespace std;
 
 template <typename T>
-uvec index_subset(T v, T sub) {
-  uvec ids = find(v==sub(0));
-  for (unsigned int i = 1; i < sub.n_elem; ++i) {
-    uvec tmp = find(v==sub(i));
-    if (tmp.n_elem>0) ids.insert_rows(0, tmp);
+  uvec index_subset(T v, T sub) {
+    uvec ids = find(v==sub(0));
+    for (unsigned int i = 1; i < sub.n_elem; ++i) {
+      uvec tmp = find(v==sub(i));
+      if (tmp.n_elem>0) ids.insert_rows(0, tmp);
+    }
+    return sort(ids);
   }
-  return sort(ids);
-}
 
 bool newsplit(vector<unsigned int> &vars, vector<double> &cutoffs,
               unsigned int &var, double &cutoff) {
@@ -35,7 +35,7 @@ bool newsplit(vector<unsigned int> &vars, vector<double> &cutoffs,
 uvec setdiff(uvec &a, uvec &b) {
   a = sort(a), b = sort(b);
   vector<unsigned int> avec = conv_to<vector<unsigned int>>::from(a),
-    bvec = conv_to<vector<unsigned int>>::from(b), cvec;
+  bvec = conv_to<vector<unsigned int>>::from(b), cvec;
   
   set_difference(avec.begin(), avec.end(), bvec.begin(), bvec.end(), 
                  inserter(cvec, cvec.end()));
@@ -230,16 +230,17 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
   }
 }
 
-// [[Rcpp::export]]
-List growTree_wtavg(const vec &y_trainest, const mat &X_trainest,
-                    const uvec &trt_trainest, const vec &prob_trainest,
-                    const mat &X_val, const unsigned int &ntrts=5,
-                    const unsigned int &nvars=3, const double &lambda1=0.5,
-                    const double &lambda2=0.5, const bool &ipw=true,
-                    const unsigned int &nodesize=5, const double &prop_train=0.5,
-                    const double &epi=0.1, const bool &reg=true,
-                    const bool &impute=true,
-                    const bool &setseed=false, const unsigned int &seed=1) {
+List growTree(const vec &y_trainest, const mat &X_trainest,
+              const uvec &trt_trainest, const vec &prob_trainest,
+              const uvec &cluster_trainest,
+              const mat &X_val, const unsigned int &ntrts=5,
+              const unsigned int &nvars=3, const double &lambda1=0.5,
+              const double &lambda2=0.5, const bool &ipw=true,
+              const unsigned int &nodesize=5,
+              const double &prop_train=0.5,
+              const double &epi=0.1, const bool &reg=true,
+              const bool &impute=true,
+              const bool &setseed=false, const unsigned int &seed=1) {
   if (setseed) set_seed(seed);
   // analogous to slice_sample in dplyr: sampling within each treatment slice
   List list_ids = slice_sample(regspace<uvec>(0, X_trainest.n_rows-1),
@@ -369,16 +370,16 @@ List growTree_wtavg(const vec &y_trainest, const mat &X_trainest,
   }
   mat mat_res, mat_ct;
   if (reg) {
-    uvec trts_uniq = sort(unique(trt_trainest));
-    mat_res.zeros(X_val.n_rows, trts_uniq.n_elem);
-    mat_ct.zeros(X_val.n_rows, trts_uniq.n_elem);
+    uvec clus_uniq = sort(unique(cluster_trainest));
+    mat_res.zeros(X_val.n_rows, clus_uniq.n_elem);
+    mat_ct.zeros(X_val.n_rows, clus_uniq.n_elem);
     for (unsigned int i = 0; i < type.size(); ++i) { // go thru each terminal node
-      uvec trt_tmp = trt_trainest(filter_est[i]); // subvector of trt column
+      uvec clus_tmp = cluster_trainest(filter_est[i]); // subvector of trt column
       vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
-      urowvec count(trts_uniq.n_elem);
-      rowvec numer(trts_uniq.n_elem), denom(trts_uniq.n_elem);
-      for (unsigned int t = 0; t < trts_uniq.n_elem; ++t) {
-        uvec id_tmp = find(trt_tmp==trts_uniq(t));
+      urowvec count(clus_uniq.n_elem);
+      rowvec numer(clus_uniq.n_elem), denom(clus_uniq.n_elem);
+      for (unsigned int t = 0; t < clus_uniq.n_elem; ++t) {
+        uvec id_tmp = find(clus_tmp==clus_uniq(t));
         if (id_tmp.n_elem==0) { // one trt level missing
           count(t) = 0; numer(t) = 0; denom(t) = 0;
         } else {
@@ -390,7 +391,7 @@ List growTree_wtavg(const vec &y_trainest, const mat &X_trainest,
       rowvec regavg = 1 - denom; regavg *= accu(numer)/accu(denom);
       regavg += numer;
       if (!impute) {
-        for (unsigned int t = 0; t < trts_uniq.n_elem; ++t) {
+        for (unsigned int t = 0; t < clus_uniq.n_elem; ++t) {
           if (count(t)==0) regavg(t) = 0;
         }
       }
@@ -401,16 +402,16 @@ List growTree_wtavg(const vec &y_trainest, const mat &X_trainest,
       mat_ct.rows(filter_val[i]) += repmat(regwt, filter_val[i].n_elem, 1);
     }
   } else {
-    uvec trts_uniq = sort(unique(trt_trainest));
-    mat_res.zeros(X_val.n_rows, trts_uniq.n_elem);
-    mat_ct.zeros(X_val.n_rows, trts_uniq.n_elem);
+    uvec clus_uniq = sort(unique(cluster_trainest));
+    mat_res.zeros(X_val.n_rows, clus_uniq.n_elem);
+    mat_ct.zeros(X_val.n_rows, clus_uniq.n_elem);
     for (unsigned int i = 0; i < type.size(); ++i) { // go thru each terminal node
-      uvec trt_tmp = trt_trainest(filter_est[i]); // subvector of trt column
+      uvec clus_tmp = cluster_trainest(filter_est[i]); // subvector of trt column
       vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
-      urowvec count(trts_uniq.n_elem);
-      rowvec avg(trts_uniq.n_elem);
-      for (unsigned int t = 0; t < trts_uniq.n_elem; ++t) {
-        uvec id_tmp = find(trt_tmp==trts_uniq(t));
+      urowvec count(clus_uniq.n_elem);
+      rowvec avg(clus_uniq.n_elem);
+      for (unsigned int t = 0; t < clus_uniq.n_elem; ++t) {
+        uvec id_tmp = find(clus_tmp==clus_uniq(t));
         if (id_tmp.n_elem==0) { // one trt level missing
           count(t) = 0; avg(t) = 0;
         } else {
@@ -431,35 +432,36 @@ List growTree_wtavg(const vec &y_trainest, const mat &X_trainest,
 // [[Rcpp::export]]
 List growForest_cpp(const vec &y_trainest, const mat &X_trainest,
                     const uvec &trt_trainest, const vec &prob_trainest,
-                    const mat &X_val,
+                    const uvec &cluster_trainest, const mat &X_val,
                     const unsigned int &ntrts=5, const unsigned int &nvars=3,
                     const double &lambda1=0.5, const double &lambda2=0.5,
                     const bool &ipw=true, const unsigned int &nodesize=5,
                     const unsigned int &ntree=1000,
                     const double &prop_train=0.5, const double &epi=0.1,
                     const bool &reg=true, const bool &impute=true,
-                    const bool &setseed=false,
-                    const unsigned int &seed=1) {
+                    const bool &setseed=false, const unsigned int &seed=1) {
   if (setseed) set_seed(seed);
-  uvec trt_uniq = sort(unique(trt_trainest));
-  unsigned int ntrt = trt_uniq.n_elem;
-  mat outcome(X_val.n_rows, ntrt, fill::zeros), ct(X_val.n_rows, ntrt, fill::zeros);
+  uvec clus_uniq = sort(unique(cluster_trainest));
+  unsigned int nclus = clus_uniq.n_elem;
+  mat outcome(X_val.n_rows, nclus, fill::zeros), ct(X_val.n_rows, nclus, fill::zeros);
   for (unsigned int i = 0; i < ntree; ++i) {
-    List tree_tmp = growTree_wtavg(y_trainest, X_trainest, trt_trainest,
-                                   prob_trainest, X_val, ntrts, nvars, lambda1,
-                                   lambda2, ipw, nodesize, prop_train, epi,
-                                   reg, impute);
+    List tree_tmp = growTree(y_trainest, X_trainest, trt_trainest,
+                             prob_trainest, cluster_trainest,
+                             X_val, ntrts, nvars, lambda1,
+                             lambda2, ipw, nodesize, prop_train, epi,
+                             reg, impute);
     mat outcome_tmp = tree_tmp["res"], ct_tmp = tree_tmp["ct"];
     outcome += outcome_tmp;
     ct += ct_tmp;
   }
   ct.replace(0.0, 1.0);
   outcome /= ct;
-  // identify optimal trt idx for each unit in val data
-  uvec idx_trt = index_max(outcome, 1);
-  uvec trt_pred(idx_trt.n_elem, fill::zeros);
-  for (unsigned int t = 0; t < ntrt; ++t) {
-    trt_pred(find(idx_trt==t)) += trt_uniq(t);
+  // identify optimal clus idx for each unit in val data
+  uvec idx_clus = index_max(outcome, 1);
+  uvec clus_pred(idx_clus.n_elem, fill::zeros);
+  for (unsigned int t = 0; t < nclus; ++t) {
+    clus_pred(find(idx_clus==t)) += clus_uniq(t);
   }
-  return List::create(_["Y.pred"]=max(outcome, 1), _["trt.dof"]=trt_pred);
+  return List::create(_["Y.cf"]=outcome, _["Y.pred"]=max(outcome, 1),
+                      _["trt.dof"]=clus_pred);
 }
