@@ -419,7 +419,7 @@ List growTree(const vec &y_trainest, const mat &X_trainest,
           avg(t) = mean(y_tmp(id_tmp));
         }
       }
-      rowvec wt(regavg.n_elem, fill::zeros);
+      rowvec wt(clus_uniq.n_elem, fill::zeros);
       wt(find(count)) += 1.0;
       // assign avg to units of val data belonging to the terminal node
       mat_res.rows(filter_val[i]) += repmat(avg, filter_val[i].n_elem, 1);
