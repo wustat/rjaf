@@ -76,7 +76,7 @@ growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                        ntrt=5, nvar=3, lambda1=0.5, lambda2=0.5, ipw=TRUE,
                        nodesize=5, ntree=1000, prop.train=0.5, epi=0.1,
                        resid=TRUE, clus.tree.growing=FALSE, clus.outcome.avg=FALSE,
-                       ncluster=3, reg=TRUE, impute=TRUE,
+                       clus.max=10, reg=TRUE, impute=TRUE,
                        setseed=FALSE, seed=1, nfold=5) {
   trts <- unique(pull(data.trainest, trt))
   if (ntrt>length(trts)) stop("Invalid ntrt!")
@@ -84,23 +84,26 @@ growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
   data.validation <- mutate(data.validation, across(c(id, trt), as.character))
   if (resid) data.trainest <- residualize(data.trainest, y, vars, nfold)
   if (clus.tree.growing) {
-    if (ncluster>length(trts)) stop("Invalid ncluster!")
+    if (clus.max>length(trts) | clus.max<2) stop("Invalid clus.max!")
     data.trainest$fold <- sample(1:nfold, NROW(data.trainest), T, rep(1, nfold))
-    cluster <-
-      stats::kmeans(t(do.call(rbind, lapply(1:nfold, function(k) {
-        data.onefold <- filter(data.trainest, fold==k)
-        data.rest <- filter(data.trainest, fold!=k)
-        growForest_cpp(pull(data.rest, y),
-                       as.matrix(select(data.rest, all_of(vars))),
-                       as.integer(factor(pull(data.rest, trt),
-                                         as.character(trts))),
-                       pull(data.rest, prob),
-                       as.integer(factor(pull(data.rest, trt),
-                                         as.character(trts))),
-                       as.matrix(select(data.onefold, all_of(vars))),
-                       ntrt, nvar, lambda1, lambda2, ipw, nodesize, ntree,
-                       prop.train, epi, reg, impute, setseed, seed)$Y.cf
-      }))), ncluster, nstart=5)$cluster
+    ls.kmeans <- lapply(2:clus.max, function(i)
+      stats::kmeans(
+        t(do.call(rbind, lapply(1:nfold, function(k) {
+          data.onefold <- filter(data.trainest, fold==k)
+          data.rest <- filter(data.trainest, fold!=k)
+          growForest_cpp(pull(data.rest, y),
+                         as.matrix(select(data.rest, all_of(vars))),
+                         as.integer(factor(pull(data.rest, trt),
+                                           as.character(trts))),
+                         pull(data.rest, prob),
+                         as.integer(factor(pull(data.rest, trt),
+                                           as.character(trts))),
+                         as.matrix(select(data.onefold, all_of(vars))),
+                         ntrt, nvar, lambda1, lambda2, ipw, nodesize, ntree,
+                         prop.train, epi, reg, impute, setseed, seed)$Y.cf
+        }))), i, nstart=5))
+    vec.prop <- sapply(ls.kmeans, function(list) list$betweenss/list$totss)
+    cluster <- ls.kmeans[[which.max(diff(vec.prop))+1]]$cluster
     df <- data.frame(cluster)
     df[trt] <- as.character(trts)
     df <- summarise(group_by(data.trainest, trt),
@@ -114,7 +117,7 @@ growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
     str.tree.growing <- as.integer(factor(pull(data.trainest, cluster),
                                           as.character(clus)))
     prob.tree.growing <- pull(data.trainest, prob_cluster)
-    nstr <- ncluster
+    nstr <- length(unique(cluster))
     if (clus.outcome.avg) {
       str.outcome.avg <- as.integer(factor(pull(data.trainest, cluster),
                                            as.character(clus)))
