@@ -1,0 +1,4 @@
+#W.opt is an N-length vector of optimal treatment assignments learnt on the validation data (nrow= N)
+find.opt.average = function(W.opt){
+
+}
