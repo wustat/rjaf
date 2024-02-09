@@ -1,0 +1,21 @@
+#W.opt is an N-length vector of optimal treatment assignments learnt on the validation data (nrow= N)
+#data.val has the following structure: (X,Y, W_assigned, Y_cf0, Y_cf1,...Y_cfK)
+find.opt.average = function(data.val, W.opt){
+
+data.val = cbind(data.val,W.opt)
+# For each of the rows in data.val, get the Y_cf corresponding to W.opt, and save that as Y_opt
+# Convert the wide data.val (Y_Cfs) into a long one, grouped by id, X, Y, W.opt
+
+# Get the Y_cf corresponding to the W.opt -> that is the Y.opt, drop everything else
+data.val = data.val %>% mutate(Y_opt = )
+# Opt. outcome under assignment is: average of Y_opt
+data.val
+
+
+# Mean outcome under random assignment 
+mean(data.val$Y)
+
+# Mean outcome under on average best arm assignment
+
+return(c())
+}
