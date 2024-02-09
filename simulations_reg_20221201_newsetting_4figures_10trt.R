@@ -56,13 +56,13 @@ system.time(
                 
                 tmp.cf <-
                   dplyr::select(data.val, all_of(c(id, paste0(y, trts)))) %>%
-                  pivot_longer(paste0(y, trts), trt, y, values_to=y) %>%
+                  pivot_longer(paste0(y, trts), names_to=trt, names_prefix=y, values_to=y) %>%
                   mutate(across(c(id, trt), as.character)) %>%
                   inner_join(
                     df.cf %>% as.data.frame %>%
                       mutate(!!(id):=data.val %>% pull(id)) %>%
                       relocate(id) %>%
-                      pivot_longer(all_of(trts), trt, values_to=y) %>%
+                      pivot_longer(all_of(trts), names_to=trt, values_to=y) %>%
                       group_by(id) %>%
                       dplyr::summarise(!!trt:=(!!sym(trt))[!!sym(y)==max(!!sym(y))],
                                        .groups="drop"), by=c(id, trt)) %>%
@@ -86,13 +86,13 @@ system.time(
                 
                 tmp.rf <-
                   dplyr::select(data.val, all_of(c(id, paste0(y, trts)))) %>%
-                  pivot_longer(paste0(y, trts), trt, y, values_to=y) %>%
+                  pivot_longer(paste0(y, trts), names_to=trt, names_prefix=y, values_to=y) %>%
                   mutate(across(c(id, trt), as.character)) %>%
                   inner_join(
                     df.rf %>% as.data.frame %>%
                       mutate(!!(id):=data.val %>% pull(id)) %>%
                       relocate(id) %>%
-                      pivot_longer(all_of(trts), trt, values_to=y) %>%
+                      pivot_longer(all_of(trts), names_to=trt, values_to=y) %>%
                       group_by(id) %>%
                       dplyr::summarise(!!trt:=(!!sym(trt))[!!sym(y)==max(!!sym(y))],
                                        .groups="drop"), by=c(id, trt)) %>%
@@ -114,7 +114,7 @@ system.time(
                   inner_join(oracle(data.validation, y, id, trt), by=id) %>%
                   dplyr::summarise(
                     rate.optassign.dof=mean(!!sym(paste0(trt,".oracle"))==
-                                          !!sym(paste0(trt,".dof"))),
+                                              !!sym(paste0(trt,".dof"))),
                     fitted.dof=mean(!!sym(paste0(y,".pred"))),
                     true.oracle=mean(!!sym(paste0(y,".oracle"))),
                     true.dof=mean(!!sym(paste0(y,".dof"))),
