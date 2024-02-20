@@ -1,26 +1,26 @@
 #define ARMA_NO_DEBUG
 // #define ARMA_DONT_USE_OPENMP
-  #define STRICT_R_HEADERS // needed on Windows, not macOS
-  #include <RcppArmadillo.h>
-  #include <RcppArmadilloExtensions/sample.h> // for Rcpp::RcppArmadillo::sample
-  // [[Rcpp::depends(RcppArmadillo)]]
+#define STRICT_R_HEADERS // needed on Windows, not macOS
+#include <RcppArmadillo.h>
+#include <RcppArmadilloExtensions/sample.h> // for Rcpp::RcppArmadillo::sample
+// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp11)]]
 
 using namespace Rcpp;
-using namespace arma;
-using namespace std;
+// using namespace arma;
+// using namespace std;
 
 template <typename T>
-  uvec index_subset(T v, T sub) {
-    uvec ids = find(v==sub(0));
-    for (unsigned int i = 1; i < sub.n_elem; ++i) {
-      uvec tmp = find(v==sub(i));
-      if (tmp.n_elem>0) ids.insert_rows(0, tmp);
-    }
-    return sort(ids);
+arma::uvec index_subset(T v, T sub) {
+  arma::uvec ids = find(v==sub(0));
+  for (unsigned int i = 1; i < sub.n_elem; ++i) {
+    arma::uvec tmp = find(v==sub(i));
+    if (tmp.n_elem>0) ids.insert_rows(0, tmp);
   }
+  return sort(ids);
+}
 
-bool newsplit(vector<unsigned int> &vars, vector<double> &cutoffs,
+bool newsplit(std::vector<unsigned int> &vars, std::vector<double> &cutoffs,
               unsigned int &var, double &cutoff) {
   bool news = true; // default to true
   for (unsigned int i = 0; i < vars.size(); ++i) {
@@ -32,25 +32,25 @@ bool newsplit(vector<unsigned int> &vars, vector<double> &cutoffs,
   return news;
 }
 
-uvec setdiff(uvec &a, uvec &b) {
+arma::uvec setdiff(arma::uvec &a, arma::uvec &b) {
   a = sort(a), b = sort(b);
-  vector<unsigned int> avec = conv_to<vector<unsigned int>>::from(a),
-  bvec = conv_to<vector<unsigned int>>::from(b), cvec;
+  std::vector<unsigned int> avec = arma::conv_to<std::vector<unsigned int>>::from(a),
+    bvec = arma::conv_to< std::vector<unsigned int>>::from(b), cvec;
   
   set_difference(avec.begin(), avec.end(), bvec.begin(), bvec.end(), 
-                 inserter(cvec, cvec.end()));
-  uvec c = conv_to<uvec>::from(cvec);
+                 std::inserter(cvec, cvec.end()));
+  arma::uvec c = arma::conv_to<arma::uvec>::from(cvec);
   return c;
 }
 
-List slice_sample(const uvec &ids, const uvec &trt, const double &prop=0.5) {
-  uvec trt_uniq = sort(unique(trt));
+List slice_sample(const arma::uvec &ids, const arma::uvec &trt, const double &prop=0.5) {
+  arma::uvec trt_uniq = sort(unique(trt));
   unsigned int ntrt = trt_uniq.n_elem;
-  uvec ids_train, ids_est;
+  arma::uvec ids_train, ids_est;
   for (unsigned int t = 0; t < ntrt; ++t) {
-    uvec ids_tmp = ids(find(trt==trt_uniq(t)));
+    arma::uvec ids_tmp = ids(find(trt==trt_uniq(t)));
     unsigned int n_tmp = floor(prop*ids_tmp.n_elem);
-    uvec ids_tmp_train = Rcpp::RcppArmadillo::sample(ids_tmp, n_tmp, false);
+    arma::uvec ids_tmp_train = Rcpp::RcppArmadillo::sample(ids_tmp, n_tmp, false);
     ids_train.insert_rows(0, ids_tmp_train);
     ids_est.insert_rows(0, setdiff(ids_tmp, ids_tmp_train));
   }
@@ -64,18 +64,18 @@ void set_seed(unsigned int seed) {
 }
 
 // identify the optimal split given a subsample of training data
-List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
-                   const double &lambda=0.5, const bool &ipw=true,
-                   const unsigned int &nodesize=5) {
+List splitting(const arma::vec &y, const arma::mat &X, const arma::uvec &trt, const arma::vec &prob,
+               const double &lambda=0.5, const bool &ipw=true,
+               const unsigned int &nodesize=5) {
   Function Rquantile("quantile"); // call R's quantile within Rcpp
-  uvec trt_uniq = sort(unique(trt));
+  arma::uvec trt_uniq = sort(unique(trt));
   unsigned int ntrt = trt_uniq.n_elem;
   unsigned int nvar = X.n_cols;
   // group ids, y, X, probs by trt
-  vector<uvec> idx_trt; vector<vec> y_trt;
-  vector<mat> X_trt; rowvec probs(ntrt);
+  std::vector<arma::uvec> idx_trt; std::vector<arma::vec> y_trt;
+  std::vector<arma::mat> X_trt; arma::rowvec probs(ntrt);
   for (unsigned int t = 0; t < ntrt; ++t) {
-    uvec tmp = find(trt==trt_uniq(t));
+    arma::uvec tmp = find(trt==trt_uniq(t));
     idx_trt.push_back(tmp);
     y_trt.push_back(y.elem(tmp));
     probs(t) = mean(prob.elem(tmp));
@@ -83,44 +83,44 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
   }
   // for each covariate, record two values of optimal utility, an optimal cutoff,
   // qualification status, and two optimal treatments
-  mat utility(nvar, 2, fill::zeros); vec cutoffs_var(nvar, fill::zeros);
-  uvec qualified(nvar); umat treatments(nvar, 2);
+  arma::mat utility(nvar, 2, arma::fill::zeros); arma::vec cutoffs_var(nvar, arma::fill::zeros);
+  arma::uvec qualified(nvar); arma::umat treatments(nvar, 2);
   if (ipw) {
     for (unsigned int i = 0; i < nvar; ++i) { // go through each covariate
-      vec x_uniq = sort(unique(X.col(i))), cutoffs;
+      arma::vec x_uniq = sort(unique(X.col(i))), cutoffs;
       if (x_uniq.n_elem < 10) { // fewer than 10 unique values 
         cutoffs = x_uniq;
         // adjust the least cutoff to guarantee non-empty nodes
-        cutoffs(0) = mean(cutoffs.subvec(0,1)); 
-      } else { // at least 10 unique values 
+        cutoffs(0) = mean(cutoffs.subvec(0,1));
+      } else { // at least 10 unique values
         // cutoffs = quantile(x_uniq, regspace(0.1,0.1,0.9)); // Armadillo
-        cutoffs = as<vec>(Rquantile(x_uniq, regspace(0.1,0.1,0.9),
-                                    _["type"]=7)); // R
+        cutoffs = as<arma::vec>(Rquantile(x_uniq, arma::regspace(0.1,0.1,0.9),
+                                          _["type"]=7)); // R
       }
       // for each cutoff, record two values of utility, two optimal treatments,
       // and qualification status
-      mat util(cutoffs.n_elem, 2); umat trts(cutoffs.n_elem, 2);
-      uvec qual(cutoffs.n_elem);
+      arma::mat util(cutoffs.n_elem, 2); arma::umat trts(cutoffs.n_elem, 2);
+      arma::uvec qual(cutoffs.n_elem);
       for (unsigned int j = 0; j < cutoffs.n_elem; ++j) { // go thru each cutoff
         // record numer, denom, and count for each treatment
-        mat numer(ntrt,2), denom(ntrt,2); umat count(ntrt,2);
+        arma::mat numer(ntrt,2), denom(ntrt,2); arma::umat count(ntrt,2);
         for (unsigned int t = 0; t < ntrt; ++t) {
-          vec ya = y_trt[t](find(X_trt[t].col(i)<cutoffs(j))); 
-          vec yb = y_trt[t](find(X_trt[t].col(i)>=cutoffs(j)));
+          arma::vec ya = y_trt[t](find(X_trt[t].col(i)<cutoffs(j))); 
+          arma::vec yb = y_trt[t](find(X_trt[t].col(i)>=cutoffs(j)));
           count(t,0) = ya.n_elem; count(t,1) = yb.n_elem;
-          numer(t,0) = accu(ya)/(ya.n_elem+lambda);
-          numer(t,1) = accu(yb)/(yb.n_elem+lambda);
+          numer(t,0) = arma::accu(ya)/(ya.n_elem+lambda);
+          numer(t,1) = arma::accu(yb)/(yb.n_elem+lambda);
           denom(t,0) = ya.n_elem/(ya.n_elem+lambda);
           denom(t,1) = yb.n_elem/(yb.n_elem+lambda);
         }
-        mat regavg = 1 - denom;
+        arma::mat regavg = 1 - denom;
         regavg.each_row() %= sum(numer)/sum(denom);
         regavg += numer; // regularized avg outcomes
-        rowvec regavg_opt = max(regavg); // max regavg for each column
+        arma::rowvec regavg_opt = max(regavg); // max regavg for each column
         // record optimal treatments for both branches (may not be unique)
-        uvec id0 = find(regavg.col(0)==regavg_opt(0) && count.col(0)!=0);
-        uvec id1 = find(regavg.col(1)==regavg_opt(1) && count.col(1)!=0);
-        uvec ids(2);
+        arma::uvec id0 = find(regavg.col(0)==regavg_opt(0) && count.col(0)!=0);
+        arma::uvec id1 = find(regavg.col(1)==regavg_opt(1) && count.col(1)!=0);
+        arma::uvec ids(2);
         // pick a single optimal treatment for each branch
         for (unsigned int k = 0; k < id0.n_elem; ++k) {
           ids(0) = id0(k);
@@ -131,15 +131,15 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
           if (ids(0)!=id0(1)) break;
         }
         trts(j,0) = trt_uniq(ids(0)); trts(j,1) = trt_uniq(ids(1));
-        urowvec count_opt = {count(ids(0),0), count(ids(1),1)};
-        rowvec prob_opt = probs(ids);
+        arma::urowvec count_opt = {count(ids(0),0), count(ids(1),1)};
+        arma::rowvec prob_opt = probs(ids);
         util.row(j) = regavg_opt % count_opt / prob_opt; // ipw adjusted
-        urowvec count_split = sum(count); // column sum
-        // check conditions 1 & 2 for recursive splitting
+        arma::urowvec count_split = sum(count); // column sum
+        // check conditions 1, 2, and 3 for recursive partitioning
         qual(j) = static_cast<unsigned int>(min(count_split)>=nodesize &&
           min(sum(count!=0))>=2 && ids(0)!=ids(1));
       }
-      uvec id_notqual = find(qual==0);
+      arma::uvec id_notqual = find(qual==0);
       // drop cutoffs with unqualified splits
       util.shed_rows(id_notqual); cutoffs.shed_rows(id_notqual);
       trts.shed_rows(id_notqual);
@@ -155,36 +155,36 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
     }
   } else {
     for (unsigned int i = 0; i < nvar; ++i) { // go through each covariate
-      vec x_uniq = sort(unique(X.col(i))), cutoffs;
+      arma::vec x_uniq = sort(unique(X.col(i))), cutoffs;
       if (x_uniq.n_elem < 10) {
         cutoffs = x_uniq;
         cutoffs(0) = mean(cutoffs.subvec(0,1));
       } else {
         // cutoffs = quantile(x_uniq, regspace(0.1,0.1,0.9));
-        cutoffs = as<vec>(Rquantile(x_uniq, regspace(0.1,0.1,0.9),
-                                    _["type"]=7));
+        cutoffs = as<arma::vec>(Rquantile(x_uniq, arma::regspace(0.1,0.1,0.9),
+                                          _["type"]=7));
       }
-      mat util(cutoffs.n_elem, 2);
-      umat trts(cutoffs.n_elem, 2);
-      uvec qual(cutoffs.n_elem);
+      arma::mat util(cutoffs.n_elem, 2);
+      arma::umat trts(cutoffs.n_elem, 2);
+      arma::uvec qual(cutoffs.n_elem);
       for (unsigned int j = 0; j < cutoffs.n_elem; ++j) {
-        mat numer(ntrt,2), denom(ntrt,2);
-        umat count(ntrt,2);
+        arma::mat numer(ntrt,2), denom(ntrt,2);
+        arma::umat count(ntrt,2);
         for (unsigned int t = 0; t < ntrt; ++t) {
-          vec ya = y_trt[t](find(X_trt[t].col(i)<cutoffs(j))); 
-          vec yb = y_trt[t](find(X_trt[t].col(i)>=cutoffs(j)));
+          arma::vec ya = y_trt[t](find(X_trt[t].col(i)<cutoffs(j))); 
+          arma::vec yb = y_trt[t](find(X_trt[t].col(i)>=cutoffs(j)));
           count(t,0) = ya.n_elem; count(t,1) = yb.n_elem;
           numer(t,0) = accu(ya)/(ya.n_elem+lambda);
           numer(t,1) = accu(yb)/(yb.n_elem+lambda);
           denom(t,0) = ya.n_elem/(ya.n_elem+lambda);
           denom(t,1) = yb.n_elem/(yb.n_elem+lambda);
         }
-        mat regavg = 1 - denom; regavg.each_row() %= sum(numer)/sum(denom);
+        arma::mat regavg = 1 - denom; regavg.each_row() %= sum(numer)/sum(denom);
         regavg += numer;
-        rowvec regavg_opt = max(regavg);
-        uvec id0 = find(regavg.col(0)==regavg_opt(0) && count.col(0)!=0);
-        uvec id1 = find(regavg.col(1)==regavg_opt(1) && count.col(1)!=0);
-        uvec ids(2);
+        arma::rowvec regavg_opt = max(regavg);
+        arma::uvec id0 = find(regavg.col(0)==regavg_opt(0) && count.col(0)!=0);
+        arma::uvec id1 = find(regavg.col(1)==regavg_opt(1) && count.col(1)!=0);
+        arma::uvec ids(2);
         for (unsigned int k = 0; k < id0.n_elem; ++k) {
           ids(0) = id0(k);
           for (unsigned int l = 0; l < id1.n_elem; ++l) {
@@ -195,13 +195,13 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
         }
         trts(j,0) = trt_uniq(ids(0));
         trts(j,1) = trt_uniq(ids(1));
-        urowvec count_opt = {count(ids(0),0), count(ids(1),1)};
-        urowvec count_split = sum(count);
+        arma::urowvec count_opt = {count(ids(0),0), count(ids(1),1)};
+        arma::urowvec count_split = sum(count);
         util.row(j) = regavg_opt % count_split;
         qual(j) = static_cast<unsigned int>(min(count_split)>=nodesize &&
           min(sum(count!=0))>=2 && ids(0)!=ids(1));
       }
-      uvec id_notqual = find(qual==0);
+      arma::uvec id_notqual = find(qual==0);
       util.shed_rows(id_notqual); cutoffs.shed_rows(id_notqual);
       trts.shed_rows(id_notqual);
       if (util.n_rows==0) { // no qualified record for ith var
@@ -216,10 +216,10 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
     }
   }
   if (any(qualified)) { // at least one covariate with qualified optimal split
-    uvec ids = find(qualified==1);
-    mat util_qualified = utility.rows(ids);
-    umat trt_qualified = treatments.rows(ids);
-    vec cutoffs_qualified = cutoffs_var.rows(ids);
+    arma::uvec ids = find(qualified==1);
+    arma::mat util_qualified = utility.rows(ids);
+    arma::umat trt_qualified = treatments.rows(ids);
+    arma::vec cutoffs_qualified = cutoffs_var.rows(ids);
     unsigned int idx_var = index_max(sum(util_qualified, 1));
     return List::create(_["var"]=ids(idx_var),
                         _["cutoff"]=cutoffs_qualified(idx_var),
@@ -230,10 +230,10 @@ List splitting_cpp(const vec &y, const mat &X, const uvec &trt, const vec &prob,
   }
 }
 
-List growTree(const vec &y_trainest, const mat &X_trainest,
-              const uvec &trt_trainest, const vec &prob_trainest,
-              const uvec &cluster_trainest,
-              const mat &X_val, const unsigned int &ntrts=5,
+List growTree(const arma::vec &y_trainest, const arma::mat &X_trainest,
+              const arma::uvec &trt_trainest, const arma::vec &prob_trainest,
+              const arma::uvec &cluster_trainest,
+              const arma::mat &X_val, const unsigned int &ntrts=5,
               const unsigned int &nvars=3, const double &lambda1=0.5,
               const double &lambda2=0.5, const bool &ipw=true,
               const unsigned int &nodesize=5,
@@ -241,29 +241,30 @@ List growTree(const vec &y_trainest, const mat &X_trainest,
               const double &epi=0.1, const bool &reg=true,
               const bool &impute=true,
               const bool &setseed=false, const unsigned int &seed=1) {
+  // lambda1 for recursive partitioning, lambda2 for
   if (setseed) set_seed(seed);
   // analogous to slice_sample in dplyr: sampling within each treatment slice
-  List list_ids = slice_sample(regspace<uvec>(0, X_trainest.n_rows-1),
+  List list_ids = slice_sample(arma::regspace<arma::uvec>(0, X_trainest.n_rows-1),
                                trt_trainest, prop_train);
-  const uvec ids_train = list_ids["ids_train"], ids_est = list_ids["ids_est"];
-  const uvec trt = trt_trainest(ids_train);
-  const vec y = y_trainest(ids_train), prob = prob_trainest(ids_train);
-  const mat X = X_trainest.rows(ids_train), X_est = X_trainest.rows(ids_est);
-  // X: training matrix
-  // utility at root
-  uvec trt_uniq = sort(unique(trt));
+  const arma::uvec ids_train = list_ids["ids_train"], ids_est = list_ids["ids_est"];
+  const arma::uvec trt = trt_trainest(ids_train);
+  const arma::vec y = y_trainest(ids_train), prob = prob_trainest(ids_train);
+  const arma::mat X = X_trainest.rows(ids_train), X_est = X_trainest.rows(ids_est);
+  // trt, y, prob, X all for training set
+  // utility at root: begin
+  arma::uvec trt_uniq = sort(unique(trt));
   unsigned int ntrt = trt_uniq.n_elem;
-  vec numer(ntrt), denom(ntrt), probs(ntrt);
-  uvec count(ntrt);
+  arma::vec numer(ntrt), denom(ntrt), probs(ntrt);
+  arma::uvec count(ntrt);
   for (unsigned int t = 0; t < ntrt; ++t) {
-    uvec tmp = find(trt==trt_uniq(t));
-    vec y_trt = y(tmp);
+    arma::uvec tmp = find(trt==trt_uniq(t));
+    arma::vec y_trt = y(tmp);
     count(t) = y_trt.n_elem;
     probs(t) = mean(prob(tmp));
     numer(t) = accu(y_trt)/(y_trt.n_elem+lambda1);
     denom(t) = y_trt.n_elem/(y_trt.n_elem+lambda1);
   }
-  vec regavg = 1 - denom;
+  arma::vec regavg = 1 - denom;
   regavg *= accu(numer)/accu(denom);
   regavg += numer;
   unsigned int id = index_max(regavg);
@@ -273,50 +274,53 @@ List growTree(const vec &y_trainest, const mat &X_trainest,
   } else {
     util_root = max(regavg)*accu(count);
   }
-  // grow tree
-  IntegerVector parentnode = {0}, node = {1};
-  set<unsigned int> nodes2split; nodes2split.insert(1); // start from root node
-  // filter records the row indices of X
-  vector<uvec> filter;
-  filter.push_back(regspace<uvec>(0, X.n_rows-1)); // all rows of training data
-  vector<uvec> filter_est;
-  filter_est.push_back(regspace<uvec>(0, X_est.n_rows-1)); // all rows of est data
-  vector<uvec> filter_val;
-  filter_val.push_back(regspace<uvec>(0, X_val.n_rows-1)); // all rows of val data
+  // utility at root: end
+  // tree growing begins
+  IntegerVector parentnode = {0}, node = {1}; // parentnode id and node id
+  std::set<unsigned int> nodes2split; nodes2split.insert(1); // start from root node
+  std::vector<arma::uvec> filter; // filter records row indices of X
+  filter.push_back(arma::regspace<arma::uvec>(0, X.n_rows-1)); // all rows of training data
+  std::vector<arma::uvec> filter_est;
+  filter_est.push_back(arma::regspace<arma::uvec>(0, X_est.n_rows-1)); // all rows of est data
+  std::vector<arma::uvec> filter_val;
+  filter_val.push_back(arma::regspace<arma::uvec>(0, X_val.n_rows-1)); // all rows of val data
   CharacterVector type = {"split"}; // start from root node as split
+  // "leaf" indicates terminal node with no further splitting
+  // "parent" indicates splits created already 
   NumericVector util = {util_root}; // util at root node
-  vector<unsigned int> vars; vector<double> cutoffs;
+  std::vector<unsigned int> vars;  std::vector<double> cutoffs;
   // push-backs below are for root node only
-  vars.push_back(X.n_cols); cutoffs.push_back(0.0); // X.n_cols larger than any index
+  vars.push_back(X.n_cols); cutoffs.push_back(0.0);
+  // X.n_cols larger than any index; no var to split on
   double mingain = epi*stddev(y);
   do {
-    set<unsigned int> nodes2split_tmp = nodes2split;
-    for (set<unsigned int>::iterator i=nodes2split_tmp.begin();
-         i!=nodes2split_tmp.end(); ++i) {
-      unsigned int node2split = *i;
-      uvec ids = filter[node2split-1]; // zero-index in C++
-      uvec ids_est = filter_est[node2split-1];
-      uvec ids_val = filter_val[node2split-1];
-      uvec trt_tmp = trt(ids); // trt column of the subsample
-      uvec trt_sub = Rcpp::RcppArmadillo::sample(trt_uniq, ntrts, false);
-      uvec var_sub = Rcpp::RcppArmadillo::sample(regspace<uvec>(0, X.n_cols-1),
-                                                 nvars, false);
+    std::set<unsigned int> nodes2split_tmp = nodes2split;
+    for ( std::set<unsigned int>::iterator i=nodes2split_tmp.begin();
+          i!=nodes2split_tmp.end(); ++i) {
+      unsigned int node2split = *i; // node to split on
+      arma::uvec ids = filter[node2split-1]; // zero-index in C++
+      arma::uvec ids_est = filter_est[node2split-1];
+      arma::uvec ids_val = filter_val[node2split-1];
+      arma::uvec trt_tmp = trt(ids); // trt column of the subsample
+      arma::uvec trt_sub = Rcpp::RcppArmadillo::sample(trt_uniq, ntrts, false);
+      arma::uvec var_sub = Rcpp::RcppArmadillo::sample(arma::regspace<arma::uvec>(0, X.n_cols-1),
+                                                       nvars, false);
       // ids only with selected treatment levels
-      uvec ids4split = ids(index_subset(trt_tmp, trt_sub)); 
+      arma::uvec ids4split = ids(index_subset(trt_tmp, trt_sub));
       List split; int var_id;
       if (ids4split.n_elem==0) { // trt_tmp and trt_sub are disjoint--nothing to split
         var_id = -1; 
       } else { // ids4split is nonempty
-        split = splitting_cpp(y(ids4split), X.submat(ids4split, var_sub),
-                              trt(ids4split), prob(ids4split),
-                              lambda1, ipw, nodesize);
+        split = splitting(y(ids4split), X.submat(ids4split, var_sub),
+                          trt(ids4split), prob(ids4split),
+                          lambda1, ipw, nodesize);
         var_id = split["var"];
       }
-      if (var_id==-1) { // split is null
+      if (var_id==-1) { // split above is null
         type[node2split-1] = "leaf";
         nodes2split.erase(node2split); // split unavailable; drop the node
-      } else {
-        rowvec utils_split = split["util"];
+      } else { // split is nonnull
+        arma::rowvec utils_split = split["util"];
         if (accu(utils_split) - util[node2split-1] < mingain) { // no welfare gain
           type[node2split-1] = "leaf";
           nodes2split.erase(node2split); // split is not beneficial; drop the node
@@ -324,13 +328,13 @@ List growTree(const vec &y_trainest, const mat &X_trainest,
           unsigned int var = var_sub(static_cast<unsigned int>(var_id)); // var for splitting
           double cutoff = split["cutoff"];
           if (newsplit(vars, cutoffs, var, cutoff)) { // new split
-            uvec var_tmp(1); var_tmp.fill(var);
-            uvec ids_est_left = ids_est(find(X_est(ids_est,var_tmp).as_col()<cutoff));
-            uvec ids_est_right = ids_est(find(X_est(ids_est,var_tmp).as_col()>=cutoff));
-            uvec ids_val_left = ids_val(find(X_val(ids_val,var_tmp).as_col()<cutoff));
-            uvec ids_val_right = ids_val(find(X_val(ids_val,var_tmp).as_col()>=cutoff));
+            arma::uvec var_tmp(1); var_tmp.fill(var);
+            arma::uvec ids_est_left = ids_est(find(X_est(ids_est,var_tmp).as_col()<cutoff));
+            arma::uvec ids_est_right = ids_est(find(X_est(ids_est,var_tmp).as_col()>=cutoff));
+            arma::uvec ids_val_left = ids_val(find(X_val(ids_val,var_tmp).as_col()<cutoff));
+            arma::uvec ids_val_right = ids_val(find(X_val(ids_val,var_tmp).as_col()>=cutoff));
             if (ids_est_left.n_elem==0 || ids_est_right.n_elem==0 ||
-                ids_val_left.n_elem==0 || ids_val_right.n_elem==0) {  
+                ids_val_left.n_elem==0 || ids_val_right.n_elem==0) {
               // split leads to empty branch for est or val data
               type[node2split-1] = "leaf";
               nodes2split.erase(node2split); // drop split leading to empty branch
@@ -343,7 +347,7 @@ List growTree(const vec &y_trainest, const mat &X_trainest,
               nodes2split.insert(max(node)+1); node.push_back(max(node)+1);
               nodes2split.insert(max(node)+1); node.push_back(max(node)+1);
               type[node2split-1] = "parent";
-              nodes2split.erase(node2split);
+              nodes2split.erase(node2split); // split node off the list
               type.push_back("split"); type.push_back("split");
               util.push_back(utils_split(0)); util.push_back(utils_split(1));
               vars.push_back(var);
@@ -357,29 +361,30 @@ List growTree(const vec &y_trainest, const mat &X_trainest,
       }
     }
   } while (nodes2split.size() > 0); // at least 1 node to split; if not, stop growing
-  for (unsigned int i = 0; i < type.size(); ++i) {
-    if (type[i]=="leaf") {
+  // tree growing ends
+  for (unsigned int i = 0; i < type.size(); ++i) { // keep terminal nodes only
+    if (type[i]=="leaf") { // terminal nodes
       filter_est.insert(filter_est.begin()+i, ids_est(filter_est[i]));
       filter_est.erase(filter_est.begin()+i+1);
-    } else { // drop nonterminal nodes
+    } else { // nonterminal nodes
       type.erase(i);
       filter_est.erase(filter_est.begin()+i);
       filter_val.erase(filter_val.begin()+i);
       --i;
     }
   }
-  mat mat_res, mat_ct;
+  arma::mat mat_res, mat_ct;
   if (reg) {
-    uvec clus_uniq = sort(unique(cluster_trainest));
+    arma::uvec clus_uniq = sort(unique(cluster_trainest));
     mat_res.zeros(X_val.n_rows, clus_uniq.n_elem);
     mat_ct.zeros(X_val.n_rows, clus_uniq.n_elem);
     for (unsigned int i = 0; i < type.size(); ++i) { // go thru each terminal node
-      uvec clus_tmp = cluster_trainest(filter_est[i]); // subvector of trt column
-      vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
-      urowvec count(clus_uniq.n_elem);
-      rowvec numer(clus_uniq.n_elem), denom(clus_uniq.n_elem);
+      arma::uvec clus_tmp = cluster_trainest(filter_est[i]); // subvector of trt column
+      arma::vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
+      arma::urowvec count(clus_uniq.n_elem);
+      arma::rowvec numer(clus_uniq.n_elem), denom(clus_uniq.n_elem);
       for (unsigned int t = 0; t < clus_uniq.n_elem; ++t) {
-        uvec id_tmp = find(clus_tmp==clus_uniq(t));
+        arma::uvec id_tmp = find(clus_tmp==clus_uniq(t));
         if (id_tmp.n_elem==0) { // one trt level missing
           count(t) = 0; numer(t) = 0; denom(t) = 0;
         } else {
@@ -388,30 +393,30 @@ List growTree(const vec &y_trainest, const mat &X_trainest,
           denom(t) = id_tmp.n_elem/(id_tmp.n_elem+lambda2);
         }
       }
-      rowvec regavg = 1 - denom; regavg *= accu(numer)/accu(denom);
+      arma::rowvec regavg = 1 - denom; regavg *= accu(numer)/accu(denom);
       regavg += numer;
       if (!impute) {
         for (unsigned int t = 0; t < clus_uniq.n_elem; ++t) {
           if (count(t)==0) regavg(t) = 0;
         }
       }
-      rowvec regwt(regavg.n_elem, fill::zeros);
+      arma::rowvec regwt(regavg.n_elem, arma::fill::zeros);
       regwt(find(count)) += 1.0;
       // assign regavg to units of val data belonging to the terminal node
       mat_res.rows(filter_val[i]) += repmat(regavg, filter_val[i].n_elem, 1);
       mat_ct.rows(filter_val[i]) += repmat(regwt, filter_val[i].n_elem, 1);
     }
   } else {
-    uvec clus_uniq = sort(unique(cluster_trainest));
+    arma::uvec clus_uniq = sort(unique(cluster_trainest));
     mat_res.zeros(X_val.n_rows, clus_uniq.n_elem);
     mat_ct.zeros(X_val.n_rows, clus_uniq.n_elem);
     for (unsigned int i = 0; i < type.size(); ++i) { // go thru each terminal node
-      uvec clus_tmp = cluster_trainest(filter_est[i]); // subvector of trt column
-      vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
-      urowvec count(clus_uniq.n_elem);
-      rowvec avg(clus_uniq.n_elem);
+      arma::uvec clus_tmp = cluster_trainest(filter_est[i]); // subvector of trt column
+      arma::vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
+      arma::urowvec count(clus_uniq.n_elem);
+      arma::rowvec avg(clus_uniq.n_elem);
       for (unsigned int t = 0; t < clus_uniq.n_elem; ++t) {
-        uvec id_tmp = find(clus_tmp==clus_uniq(t));
+        arma::uvec id_tmp = find(clus_tmp==clus_uniq(t));
         if (id_tmp.n_elem==0) { // one trt level missing
           count(t) = 0; avg(t) = 0;
         } else {
@@ -419,7 +424,7 @@ List growTree(const vec &y_trainest, const mat &X_trainest,
           avg(t) = mean(y_tmp(id_tmp));
         }
       }
-      rowvec wt(clus_uniq.n_elem, fill::zeros);
+      arma::rowvec wt(clus_uniq.n_elem, arma::fill::zeros);
       wt(find(count)) += 1.0;
       // assign avg to units of val data belonging to the terminal node
       mat_res.rows(filter_val[i]) += repmat(avg, filter_val[i].n_elem, 1);
@@ -430,9 +435,9 @@ List growTree(const vec &y_trainest, const mat &X_trainest,
 }
 
 // [[Rcpp::export]]
-List growForest_cpp(const vec &y_trainest, const mat &X_trainest,
-                    const uvec &trt_trainest, const vec &prob_trainest,
-                    const uvec &cluster_trainest, const mat &X_val,
+List growForest_cpp(const arma::vec &y_trainest, const arma::mat &X_trainest,
+                    const arma::uvec &trt_trainest, const arma::vec &prob_trainest,
+                    const arma::uvec &cluster_trainest, const arma::mat &X_val,
                     const unsigned int &ntrts=5, const unsigned int &nvars=3,
                     const double &lambda1=0.5, const double &lambda2=0.5,
                     const bool &ipw=true, const unsigned int &nodesize=5,
@@ -441,24 +446,24 @@ List growForest_cpp(const vec &y_trainest, const mat &X_trainest,
                     const bool &reg=true, const bool &impute=true,
                     const bool &setseed=false, const unsigned int &seed=1) {
   if (setseed) set_seed(seed);
-  uvec clus_uniq = sort(unique(cluster_trainest));
+  arma::uvec clus_uniq = sort(unique(cluster_trainest));
   unsigned int nclus = clus_uniq.n_elem;
-  mat outcome(X_val.n_rows, nclus, fill::zeros), ct(X_val.n_rows, nclus, fill::zeros);
+  arma::mat outcome(X_val.n_rows, nclus, arma::fill::zeros), ct(X_val.n_rows, nclus, arma::fill::zeros);
   for (unsigned int i = 0; i < ntree; ++i) {
     List tree_tmp = growTree(y_trainest, X_trainest, trt_trainest,
                              prob_trainest, cluster_trainest,
                              X_val, ntrts, nvars, lambda1,
                              lambda2, ipw, nodesize, prop_train, epi,
                              reg, impute);
-    mat outcome_tmp = tree_tmp["res"], ct_tmp = tree_tmp["ct"];
+    arma::mat outcome_tmp = tree_tmp["res"], ct_tmp = tree_tmp["ct"];
     outcome += outcome_tmp;
     ct += ct_tmp;
   }
   ct.replace(0.0, 1.0);
   outcome /= ct;
   // identify optimal clus idx for each unit in val data
-  uvec idx_clus = index_max(outcome, 1);
-  uvec clus_pred(idx_clus.n_elem, fill::zeros);
+  arma::uvec idx_clus = index_max(outcome, 1);
+  arma::uvec clus_pred(idx_clus.n_elem, arma::fill::zeros);
   for (unsigned int t = 0; t < nclus; ++t) {
     clus_pred(find(idx_clus==t)) += clus_uniq(t);
   }
