@@ -1,22 +1,3 @@
-sim.data <- function(n, K, gamma, sigma, prob=rep(1,K+1)/(K+1)) {
-  # K: number of treatment arms
-  options(stringsAsFactors=F)
-  data <- left_join(data.frame(id=1:n,
-                               trt=sample(0:K, n, replace=T, prob),
-                               MASS::mvrnorm(n, rep(0,3), diag(3))),
-                    data.frame(trt=0:K, prob), by="trt")
-  data <- mutate(data, tmp1=10+20*(X1>0)-20*(X2>0)-40*(X1>0&X2>0)+1,
-                 tmp2=gamma*(2*(X3>0)-1)/(K-1),
-                 tmp3=-X1^2,
-                 Y=tmp1+tmp2*(trt>0)*(2*trt-K-1)+tmp3*(trt==0)+rnorm(n,0,sigma))
-  # Y: observed outcomes
-  Y.cf <- data.frame(sapply(0:K, function(t) # counterfactural outcomes
-    mutate(data, Y=tmp1+tmp2*(t>0)*(2*t-K-1)+tmp3*(t==0))$Y))
-  names(Y.cf) <- paste0("Y",0:K)
-  return(mutate(bind_cols(dplyr::select(data, -c(tmp1,tmp2,tmp3)), Y.cf),
-                across(c(id, trt), as.character)))
-}
-
 sim.data <- function(n, K, gamma, sigma, count=rep(1,K+1)) {
   # K: number of clusters
   options(stringsAsFactors=F)
@@ -150,11 +131,13 @@ growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                   !!(trt):=as.character(trts[ls.forest$trt.dof]),
                   !!(paste0(y, ".pred")):=as.numeric(ls.forest$Y.pred))
     if (all(paste0(y, trts) %in% names(data.validation))) {
-      res <- rename_with(inner_join(res, mutate(pivot_longer(
-        dplyr::select(data.validation, all_of(c(id, paste0(y, trts)))),
-        cols=paste0(y, trts), names_to=trt, names_prefix=y, values_to=y),
-        across(c(id, trt), as.character)),
-        by=c(id, trt)), ~str_c(.,".dof"), all_of(c(y, trt)))
+      res <- data.validation %>%
+        dplyr::select(all_of(c(id, paste0(y, trts)))) %>%
+        pivot_longer(cols=paste0(y, trts), names_to=trt, names_prefix=y,
+                     values_to=y) %>%
+        mutate(across(c(id, trt), as.character)) %>%
+        inner_join(res, by=c(id, trt)) %>%
+        rename_with(~str_c(.,".dof"), all_of(c(y, trt)))
     }
     return(res)
   }
