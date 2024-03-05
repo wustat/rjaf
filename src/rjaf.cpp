@@ -435,16 +435,16 @@ List growTree(const arma::vec &y_trainest, const arma::mat &X_trainest,
 }
 
 // [[Rcpp::export]]
-List growForest_cpp(const arma::vec &y_trainest, const arma::mat &X_trainest,
-                    const arma::uvec &trt_trainest, const arma::vec &prob_trainest,
-                    const arma::uvec &cluster_trainest, const arma::mat &X_val,
-                    const unsigned int &ntrts=5, const unsigned int &nvars=3,
-                    const double &lambda1=0.5, const double &lambda2=0.5,
-                    const bool &ipw=true, const unsigned int &nodesize=5,
-                    const unsigned int &ntree=1000,
-                    const double &prop_train=0.5, const double &epi=0.1,
-                    const bool &reg=true, const bool &impute=true,
-                    const bool &setseed=false, const unsigned int &seed=1) {
+List rjaf_cpp(const arma::vec &y_trainest, const arma::mat &X_trainest,
+              const arma::uvec &trt_trainest, const arma::vec &prob_trainest,
+              const arma::uvec &cluster_trainest, const arma::mat &X_val,
+              const unsigned int &ntrts=5, const unsigned int &nvars=3,
+              const double &lambda1=0.5, const double &lambda2=0.5,
+              const bool &ipw=true, const unsigned int &nodesize=5,
+              const unsigned int &ntree=1000,
+              const double &prop_train=0.5, const double &epi=0.1,
+              const bool &reg=true, const bool &impute=true,
+              const bool &setseed=false, const unsigned int &seed=1) {
   if (setseed) set_seed(seed);
   arma::uvec clus_uniq = sort(unique(cluster_trainest));
   unsigned int nclus = clus_uniq.n_elem;

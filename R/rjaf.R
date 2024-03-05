@@ -1,4 +1,4 @@
-#' Grow the regularized joint assignment forest with or without treatment clustering
+#' Regularized joint assignment forest with or without treatment clustering
 #' 
 #' 
 #' @param data.trainest input data used for training and estimation, where each
@@ -32,8 +32,8 @@
 #' @param clus.max control the maximum number of clusters when performing k-means clustering. 
 #' It should be greater than 1 and less than or equal to the number of unique treatments `length(trts)`. The default value is 10.
 #' @param reg if `TRUE`, we grow the regularized version of the joint assignment forest. 
-#' This parameter is passed to the function within growForest_cpp function in the dof.cpp file.
-#' @param impute if `TRUE`, imputation is used to grow tree under regularization. This parameter is passed to the growForest_cpp function in the dof.cpp file. 
+#' This parameter is passed to the function within rjaf_cpp function in the dof.cpp file.
+#' @param impute if `TRUE`, imputation is used to grow tree under regularization. This parameter is passed to the rjaf_cpp function in the dof.cpp file. 
 #' @param setseed if `TRUE`,  value of `seed` is passed to dof.cpp file and function set_seed() that sets the random seed in R.
 #' @param seed value used to set seed in dof.cpp set_seed() function is setseed is `TRUE`. The default value is 1
 #' @param nfold number of folds in cross-validation to choose the combination of these parameters for each arm-“noise” setting
@@ -51,8 +51,8 @@
 #' data(Example.train)
 #' data(Example.valid)
 #' id <- "id"; trts <- as.character(0:K); y <- "Y"; trt <- "trt";  vars <- paste0("X", 1:3); prob <- "prob";
-#' forest.reg1 <- growForest(Example.train, Example.valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = TRUE)
-#' forest.reg2 <- growForest(Example.train, Example.valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = FALSE)
+#' forest.reg1 <- rjaf(Example.train, Example.valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = TRUE)
+#' forest.reg2 <- rjaf(Example.train, Example.valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = FALSE)
 #' 
 #' 
 #' @references 
@@ -62,12 +62,12 @@
 #' \cr
 #' 
 
-growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
-                       ntrt=5, nvar=3, lambda1=0.5, lambda2=0.5, ipw=TRUE,
-                       nodesize=5, ntree=1000, prop.train=0.5, epi=0.1,
-                       resid=TRUE, clus.tree.growing=FALSE, clus.outcome.avg=FALSE,
-                       clus.max=10, reg=TRUE, impute=TRUE,
-                       setseed=FALSE, seed=1, nfold=5) {
+rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
+                 ntrt=5, nvar=3, lambda1=0.5, lambda2=0.5, ipw=TRUE,
+                 nodesize=5, ntree=1000, prop.train=0.5, epi=0.1,
+                 resid=TRUE, clus.tree.growing=FALSE, clus.outcome.avg=FALSE,
+                 clus.max=10, reg=TRUE, impute=TRUE,
+                 setseed=FALSE, seed=1, nfold=5) {
   trts <- unique(pull(data.trainest, trt))
   if (ntrt>length(trts)) stop("Invalid ntrt!")
   data.trainest <- mutate(data.trainest, across(c(id, trt), as.character))
@@ -81,16 +81,16 @@ growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
         t(do.call(rbind, lapply(1:nfold, function(k) {
           data.onefold <- filter(data.trainest, fold==k)
           data.rest <- filter(data.trainest, fold!=k)
-          growForest_cpp(pull(data.rest, y),
-                         as.matrix(select(data.rest, all_of(vars))),
-                         as.integer(factor(pull(data.rest, trt),
-                                           as.character(trts))),
-                         pull(data.rest, prob),
-                         as.integer(factor(pull(data.rest, trt),
-                                           as.character(trts))),
-                         as.matrix(select(data.onefold, all_of(vars))),
-                         ntrt, nvar, lambda1, lambda2, ipw, nodesize, ntree,
-                         prop.train, epi, reg, impute, setseed, seed)$Y.cf
+          rjaf_cpp(pull(data.rest, y),
+                   as.matrix(select(data.rest, all_of(vars))),
+                   as.integer(factor(pull(data.rest, trt),
+                                     as.character(trts))),
+                   pull(data.rest, prob),
+                   as.integer(factor(pull(data.rest, trt),
+                                     as.character(trts))),
+                   as.matrix(select(data.onefold, all_of(vars))),
+                   ntrt, nvar, lambda1, lambda2, ipw, nodesize, ntree,
+                   prop.train, epi, reg, impute, setseed, seed)$Y.cf
         }))), i, nstart=5))
     vec.prop <- sapply(ls.kmeans, function(list) list$betweenss/list$totss)
     cluster <- ls.kmeans[[which.max(diff(vec.prop))+1]]$cluster
@@ -124,12 +124,12 @@ growForest <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                                          as.character(trts)))
   }
   ls.forest <-
-    growForest_cpp(pull(data.trainest, y),
-                   as.matrix(select(data.trainest, all_of(vars))),
-                   str.tree.growing, prob.tree.growing, str.outcome.avg,
-                   as.matrix(select(data.validation, all_of(vars))),
-                   nstr, nvar, lambda1, lambda2, ipw, nodesize, ntree,
-                   prop.train, epi, reg, impute, setseed, seed)
+    rjaf_cpp(pull(data.trainest, y),
+             as.matrix(select(data.trainest, all_of(vars))),
+             str.tree.growing, prob.tree.growing, str.outcome.avg,
+             as.matrix(select(data.validation, all_of(vars))),
+             nstr, nvar, lambda1, lambda2, ipw, nodesize, ntree,
+             prop.train, epi, reg, impute, setseed, seed)
   if (clus.tree.growing & clus.outcome.avg) {
     res <- tibble(!!(id):=as.character(pull(data.validation, id)),
                   cluster=as.character(clus[ls.forest$trt.dof]),
