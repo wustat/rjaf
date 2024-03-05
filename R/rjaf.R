@@ -29,13 +29,13 @@
 #' @param resid if `TRUE`, we implement the arbitrary residualization so the algorithm can choose baseline function that reduce the variance of the outcome. The default value is `TRUE`.
 #' @param clus.tree.growing if `TRUE`, the algorithm should perform tree growing based on clustering. The default value is `FALSE`.
 #' @param clus.outcome.avg if`TRUE`, the algorithm should calculate the average outcome within each cluster. The default value is `FALSE`.
-#' @param clus.max control the maximum number of clusters when performing k-means clustering. 
+#' @param clus.max control the maximum number of clusters when performing k-means clustering.
 #' It should be greater than 1 and less than or equal to the number of unique treatments `length(trts)`. The default value is 10.
 #' @param reg if `TRUE`, we grow the regularized version of the joint assignment forest. 
-#' This parameter is passed to the function within rjaf_cpp function in the dof.cpp file.
-#' @param impute if `TRUE`, imputation is used to grow tree under regularization. This parameter is passed to the rjaf_cpp function in the dof.cpp file. 
-#' @param setseed if `TRUE`,  value of `seed` is passed to dof.cpp file and function set_seed() that sets the random seed in R.
-#' @param seed value used to set seed in dof.cpp set_seed() function is setseed is `TRUE`. The default value is 1
+#' This parameter is passed to the function within `rjaf_cpp` function in the rjaf.cpp file.
+#' @param impute if `TRUE`, imputation is used to grow tree under regularization. This parameter is passed to the rjaf_cpp function in the rjaf.cpp file. 
+#' @param setseed if `TRUE`,  value of `seed` is passed to rjaf.cpp file and function set_seed() that sets the random seed in R.
+#' @param seed value used to set seed in rjaf.cpp `set_seed()` function is setseed is `TRUE`. The default value is 1
 #' @param nfold number of folds in cross-validation to choose the combination of these parameters for each arm-“noise” setting
 #' 
 #' 
