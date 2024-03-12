@@ -1,14 +1,13 @@
-#' Regularized joint assignment forest with or without treatment clustering
+#' Regularized joint assignment forest with treatment clustering
 #' 
 #' 
 #' @param data.trainest input data used for training and estimation, where each
-#' row represents individual and column contains information on treatment,
-#' covariates, probability of treatment assignments, and observed outcomes.
+#' row corresponds to an individual and columns contain information on treatments,
+#' covariates, probabilities of treatment assignment, and observed outcomes.
 #' @param data.validation input data used for validation with the same row and
 #' column information as in `data.trainest`.
-#' @param y a character string stands for the name of outcomes, as usually used
-#' to pull out the outcome column in training and validation data.
-#' @param id a string variable stands for the name of IDs, 
+#' @param y a character string indicating the column name of outcomes.
+#' @param id a character string indicating the name of IDs, 
 #' as usually used to pull out the ID column in training and validation data.
 #' @param trt a string variable stands for the name of treatments, 
 #' as usually used to pull out the treatment column in training and validation data.
