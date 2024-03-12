@@ -15,9 +15,9 @@
 #'
 #' @examples 
 #' data(Example.trainest) ##TO DO: need to regenerate this to add est data (name). 
-#' data(Example.valid)
-#' id <- "id"; trts <- as.character(0:K); y <- "Y"; trt <- "trt";  vars <- paste0("X", 1:3); prob <- "prob";
-#' Example_resid <- residualize(Example.trainest, Example.valid, y, vars, nfold = 5, fun.rf = "ranger)
+#' y <- "Y"
+#' vars <- paste0("X", 1:3)
+#' Example_resid <- residualize(Example.trainest, y, vars, nfold = 5, fun.rf = "ranger")
 #' 
 #' 
 #' 
