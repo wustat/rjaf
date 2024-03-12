@@ -7,27 +7,31 @@
 #' @param data.validation input data used for validation with the same row and
 #' column information as in `data.trainest`.
 #' @param y a character string indicating the column name of outcomes.
-#' @param id a character string indicating the name of IDs, 
-#' as usually used to pull out the ID column in training and validation data.
-#' @param trt a string variable stands for the name of treatments, 
-#' as usually used to pull out the treatment column in training and validation data.
-#' @param vars a vector of strings stands for names of covariates, 
-#' as usually used to pull out covariates column in training and validation data. The length of this vector is determined by `nvar`.
-#' @param prob a string variable stands for the name of treatment assignment probability, 
-#' as usually used to pull out the treatment assignment probability column in training and validation data.
-#' @param ntrt number of treatments specified. Should be at most equal to the unique number of treatments available. The default value is 5.
-#' @param nvar number of covariates specified. The default value is 3.
-#' @param lambda1 value for within-leaf shrinkage when growing tree. The default value is 0.5.
-#' @param lambda2 value for within-leaf shrinkage when estimating. The default value is 0.5.
+#' @param id a character string indicating the column name of IDs.
+#' @param trt a character string indicating the column name of treatments.
+#' @param vars a vector of character strings indicating the column names of covariates. 
+#' @param prob a character string indicating the column name of probabilities of
+#' treatment assignment.
+#' @param ntrt number of treatments randomly sampled at each split. It should be
+#' at most equal to the number of unique treatments available. The default value is 5.
+#' @param nvar number of covariates randomly sampled at each split. It should be
+#' at most equal to the number of unique covariates available. The default value is 3.
+#' @param lambda1 regularization parameter for shrinking arm-wise within-leaf average
+#' outcomes towards the overall within-leaf average outcome during recursive
+#' partitioning. The default value is 0.5.
+#' @param lambda2 regularization parameter for shrinking arm-wise within-leaf average
+#' outcomes towards the overall within-leaf average outcome during outcome estimation.
+#' It is only valid when `reg` is `TRUE`. The default value is 0.5.
 #' @param ipw if `TRUE`, inverse-propensity weighting is applied when constructing leaf-wise weighted averages, 
 #' with an approach provided by Wu and Gartsch (2018). The default value is `TRUE`.
 #' @param nodesize minimum number of observations in a terminal node. The default value is 5.
-#' @param ntree number of trees in the forest.The default value is 1000.
+#' @param ntree number of trees to grow in the forest. This should not be set to
+#' too small a number. The default value is 1000.
 #' @param prop.train proportion of samples used for training each tree. The default value is 0.5
 #' @param epi threshold for minimal welfare gain in objective. The default value is 0.1
 #' @param resid if `TRUE`, we implement the arbitrary residualization so the algorithm can choose baseline function that reduce the variance of the outcome. The default value is `TRUE`.
 #' @param clus.tree.growing if `TRUE`, the algorithm should perform tree growing based on clustering. The default value is `FALSE`.
-#' @param clus.outcome.avg if`TRUE`, the algorithm should calculate the average outcome within each cluster. The default value is `FALSE`.
+#' @param clus.outcome.avg if `TRUE`, the algorithm should calculate the average outcome within each cluster. The default value is `FALSE`.
 #' @param clus.max control the maximum number of clusters when performing k-means clustering.
 #' It should be greater than 1 and less than or equal to the number of unique treatments `length(trts)`. The default value is 10.
 #' @param reg if `TRUE`, we grow the regularized version of the joint assignment forest. 
@@ -69,6 +73,7 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                  setseed=FALSE, seed=1, nfold=5) {
   trts <- unique(pull(data.trainest, trt))
   if (ntrt>length(trts)) stop("Invalid ntrt!")
+  if (nvar>length(var)) stop("Invalid nvar!")
   data.trainest <- mutate(data.trainest, across(c(id, trt), as.character))
   data.validation <- mutate(data.validation, across(c(id, trt), as.character))
   if (resid) data.trainest <- residualize(data.trainest, y, vars, nfold)
