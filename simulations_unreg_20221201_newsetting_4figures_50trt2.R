@@ -104,7 +104,7 @@ system.time(
                 rate.optassign.rf <- tmp.rf %>% pull(rate.optassign.rf)
                 true.rf <- tmp.rf %>% pull(true.rf)
                 
-                growForest(data.trainest, data.validation, y=y, id=id, trt=trt, 
+                rjaf(data.trainest, data.validation, y=y, id=id, trt=trt, 
                            vars=vars, prob=prob, ntrt=ntrt, nvar=nvar,
                            lambda1=lambda1, lambda2=lambda2, nodesize=nodesize,
                            ntree=ntree, epi=epi, reg=reg, impute=impute,

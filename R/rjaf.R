@@ -51,11 +51,11 @@
 #' @seealso \code{\link{???}}, \code{\link{???}}, and the \code{\link{???}} function. DO WE NEED THIS?
 #'
 #' @examples 
-#' data(Example.train)
+#' data(Example.trainest)
 #' data(Example.valid)
 #' id <- "id"; trts <- as.character(0:K); y <- "Y"; trt <- "trt";  vars <- paste0("X", 1:3); prob <- "prob";
-#' forest.reg1 <- rjaf(Example.train, Example.valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = TRUE)
-#' forest.reg2 <- rjaf(Example.train, Example.valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = FALSE)
+#' forest.reg1 <- rjaf(Example.trainest, Example.valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = TRUE)
+#' forest.reg2 <- rjaf(Example.trainest, Example.valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = FALSE)
 #' 
 #' 
 #' @references 
@@ -73,7 +73,7 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                  setseed=FALSE, seed=1, nfold=5) {
   trts <- unique(pull(data.trainest, trt))
   if (ntrt>length(trts)) stop("Invalid ntrt!")
-  if (nvar>length(var)) stop("Invalid nvar!")
+  if (nvar>length(vars)) stop("Invalid nvar!")
   data.trainest <- mutate(data.trainest, across(c(id, trt), as.character))
   data.validation <- mutate(data.validation, across(c(id, trt), as.character))
   if (resid) data.trainest <- residualize(data.trainest, y, vars, nfold)
