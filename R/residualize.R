@@ -4,9 +4,9 @@
 #' Some outcome variation is shared among treatment arms. If we can predict this shared variation, we can reduce the variability in evaluating various treatment arms by subtracting it. 
 #' We include a pre-processing step in our algorithm to create residualized outcomes. To implement, we fit the baseline prediction function using cross-validation to avoid overfitting. We calculate residuals by subtracting the predicted values from the observed outcomes. 
 #' 
-#' @param data input training and estimation data from parameter `data.trainest` in `rjaf.R`.
-#' @param y a character string stands for the name of outcomes, as usually used to pull out the outcome column in training, estimation, and validation data.
-#' @param vars a vector of strings stands for names of covariates, as usually used to pull out covariates column in training estimation, and validation data. 
+#' @param data input training and estimation data from `data.trainest` within `rjaf.R`.
+#' @param y a character string indicating the column name of outcomes.
+#' @param vars a vector of character strings indicating the column names of covariates.
 #' @param nfold number of folds in cross-validation to conduct prediction through the random forest. The default value is 5.
 #' @param fun.rf specifies which random forest package to be used (`ranger` or  `randomForest`). The default value is `ranger`.
 #' 
@@ -14,7 +14,7 @@
 #' @export 
 #'
 #' @examples 
-#' data(Example.trainest) ##TO DO: need to regenerate this to add est data (name). 
+#' data(Example.trainest)
 #' y <- "Y"
 #' vars <- paste0("X", 1:3)
 #' Example_resid <- residualize(Example.trainest, y, vars, nfold = 5, fun.rf = "ranger")
