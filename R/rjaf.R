@@ -148,11 +148,12 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                   !!(trt):=as.character(trts[ls.forest$trt.dof]),
                   !!(paste0(y, ".pred")):=as.numeric(ls.forest$Y.pred))
     if (all(paste0(y, trts) %in% names(data.validation))) {
-      res <- rename_with(inner_join(res, mutate(pivot_longer(
-        dplyr::select(data.validation, all_of(c(id, paste0(y, trts)))),
-        cols=paste0(y, trts), names_to=trt, names_prefix=y, values_to=y),
-        across(c(id, trt), as.character)),
-        by=c(id, trt)), ~str_c(.,".dof"), all_of(c(y, trt)))
+      res <- data.validation %>%
+        dplyr::select(all_of(c(id, paste0(y, trts)))) %>%
+        pivot_longer(cols=paste0(y, trts), names_to=trt, names_prefix=y, values_to=y) %>%
+        mutate(across(c(id, trt), as.character)) %>%
+        inner_join(res, by=c(id, trt)) %>%
+        rename_with(~str_c(.,".dof"), all_of(c(y, trt)))
     }
     return(res)
   }
