@@ -50,9 +50,7 @@
 #' and predicted outcome, and a data frame (named as "clustering") with cluster number, probability of being assigned to the cluster, and treatment.
 #' If not, return a tibble with ID, treatment predicted by the regularized joint assignment forest, predicted outcome, and corresponding treatment outcome from the validation data.
 
-#' @export 
-#' 
-#' @seealso \code{\link{???}}, \code{\link{???}}, and the \code{\link{???}} function. DO WE NEED THIS?
+#' @export
 #'
 #' @examples 
 #' data(Example.trainest)
@@ -64,10 +62,8 @@
 #' 
 #' @references 
 #' Wu, Edward and Johann A Gagnon-Bartsch (2018). The LOOP Estimator: Adjusting for Covariates in Randomized Experiments. Evaluation Review, 42(4):458–488.
-#' 
-#' \emph{Cambridge University Press}.
 #' \cr
-#' 
+#'
 
 rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                  ntrt=5, nvar=3, lambda1=0.5, lambda2=0.5, ipw=TRUE,
