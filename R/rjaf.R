@@ -6,11 +6,11 @@
 #' covariates, probabilities of treatment assignment, and observed outcomes.
 #' @param data.validation input data used for validation with the same row and
 #' column information as in `data.trainest`.
-#' @param y a character string indicating the column name of outcomes.
-#' @param id a character string indicating the column name of IDs.
-#' @param trt a character string indicating the column name of treatments.
-#' @param vars a vector of character strings indicating the column names of covariates. 
-#' @param prob a character string indicating the column name of probabilities of
+#' @param y a character string denoting the column name of outcomes.
+#' @param id a character string denoting the column name of IDs.
+#' @param trt a character string denoting the column name of treatments.
+#' @param vars a vector of character strings denoting the column names of covariates. 
+#' @param prob a character string denoting the column name of probabilities of
 #' treatment assignment.
 #' @param ntrt number of treatments randomly sampled at each split. It should be
 #' at most equal to the number of unique treatments available. The default value is 5.
@@ -22,27 +22,29 @@
 #' @param lambda2 regularization parameter for shrinking arm-wise within-leaf average
 #' outcomes towards the overall within-leaf average outcome during outcome estimation.
 #' It is only valid when `reg` is `TRUE`. The default value is 0.5.
-#' @param ipw if `TRUE`, inverse-propensity weighting is applied when constructing leaf-wise weighted averages, 
-#' with an approach provided by Wu and Gartsch (2018). The default value is `TRUE`.
+#' @param ipw a logical indicator of inverse probability weighting when calculating
+#' leaf-wise weighted averages based on Wu and Gartsch (2018). The default value is `TRUE`.
 #' @param nodesize minimum number of observations in a terminal node. The default value is 5.
 #' @param ntree number of trees to grow in the forest. This should not be set to
 #' too small a number. The default value is 1000.
-#' @param prop.train proportion of samples used for training each tree. The default value is 0.5
-#' @param epi threshold for minimal welfare gain in objective. The default value is 0.1
+#' @param prop.train proportion of data used for training in `data.trainest`.
+#' The default value is 0.5.
+#' @param epi threshold for minimal welfare gain in terms of the empirical standard
+#' deviation of the overall outcome `y`. The default value is 0.1.
 #' @param resid if `TRUE`, we implement the arbitrary residualization so the algorithm can choose baseline function that reduce the variance of the outcome. The default value is `TRUE`.
 #' @param clus.tree.growing if `TRUE`, the algorithm should perform tree growing based on clustering. The default value is `FALSE`.
 #' @param clus.outcome.avg if `TRUE`, the algorithm should calculate the average outcome within each cluster. The default value is `FALSE`.
 #' @param clus.max control the maximum number of clusters when performing k-means clustering.
 #' It should be greater than 1 and less than or equal to the number of unique treatments `length(trts)`. The default value is 10.
 #' @param reg if `TRUE`, we grow the regularized version of the joint assignment forest. 
-#' This parameter is passed to the function within `rjaf_cpp` function in the rjaf.cpp file.
+#' This parameter is passed to the function within `rjaf_cpp` function in the `rjaf.cpp` file.
 #' @param impute if `TRUE`, imputation is used to grow tree under regularization. This parameter is passed to the rjaf_cpp function in the rjaf.cpp file. 
-#' @param setseed if `TRUE`,  value of `seed` is passed to rjaf.cpp file and function set_seed() that sets the random seed in R.
-#' @param seed value used to set seed in rjaf.cpp `set_seed()` function is setseed is `TRUE`. The default value is 1
+#' @param setseed if `TRUE`,  value of `seed` is passed to `rjaf.cpp` file and function `set_seed()` that sets the random seed in R.
+#' @param seed value used to set seed in `rjaf.cpp` `set_seed()` function is setseed is `TRUE`. The default value is 1
 #' @param nfold number of folds in cross-validation to choose the combination of these parameters for each arm-“noise” setting
 #' 
 #' 
-#' @return if both `clus.tree.growing` and `clus.outcome.avg` are true, return list containing a tibble (named as "res") with ID, cluster number, 
+#' @return If both `clus.tree.growing` and `clus.outcome.avg` are true, return list containing a tibble (named as "res") with ID, cluster number, 
 #' and predicted outcome, and a dataframe (named as "clustering") with cluster number, probability of being assigned to the cluster, and treatment.
 #' If not, return a tibble with ID, treatment predicted by the directed optimization forest, predicted outcome, and corresponding treatment outcome from the validation data.
 
