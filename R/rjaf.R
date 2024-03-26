@@ -31,24 +31,38 @@
 #' The default value is 0.5.
 #' @param epi threshold for minimal welfare gain in terms of the empirical standard
 #' deviation of the overall outcome `y`. The default value is 0.1.
-#' @param resid if `TRUE`, we implement the arbitrary residualization so the algorithm can choose baseline function that reduce the variance of the outcome. The default value is `TRUE`.
-#' @param clus.tree.growing if `TRUE`, the algorithm should perform tree growing based on clustering. The default value is `FALSE`.
-#' @param clus.outcome.avg if `TRUE`, the algorithm should calculate the average
-#' outcome within each cluster. This option is deprecated. The default value is `FALSE`.
-#' @param clus.max control the maximum number of clusters when performing k-means clustering.
-#' It should be greater than 1 and less than or equal to the number of unique treatments `length(trts)`.
+#' @param resid a logical indicator of arbitrary residualization. If `TRUE`,
+#' residualization is implemented to reduce the variance of the outcome.
+#' The default value is `TRUE`.
+#' @param clus.tree.growing a logical indicator of clustering for tree growing.
+#' The default value is `FALSE`.
+#' @param clus.outcome.avg a logical indicator of clustering for tree bagging.
+#' If `TRUE`, the average outcome is calculated across treatment clusters
+#' determined by the k-means. The default value is `FALSE`. This option is deprecated.
+#' @param clus.max the maximum number of clusters for k-means. It should be
+#' greater than 1 and at most equal to the number of unique treatments.
 #' The default value is 10.
-#' @param reg if `TRUE`, we grow the regularized version of the joint assignment forest. 
-#' This parameter is passed to the function within `rjaf_cpp` function in the `rjaf.cpp` file.
-#' @param impute if `TRUE`, imputation is used to grow tree under regularization. This parameter is passed to the `rjaf_cpp` function in the `rjaf.cpp` file. 
-#' @param setseed if `TRUE`,  value of `seed` is passed to `rjaf.cpp` file and function `set_seed()` that sets the random seed in `R`.
-#' @param seed value used to set seed in `rjaf.cpp` `set_seed()` function is setseed is `TRUE`. The default value is 1.
-#' @param nfold number of folds in cross-validation to choose the combination of these parameters for each arm-“noise” setting
+#' @param reg a logical indicator of regularization when calculating the arm-wise
+#' within-leaf average outcome.
+#' @param impute a logical indicator of imputation. If `TRUE`, the within-leaf
+#' average outcome is used to impute the arm-wise within-leaf average outcome
+#' when the arm has no observation. If `FALSE`, the within-leaf average outcome
+#' is set to zero when the arm has no observation. The default value is `TRUE`.
+#' @param setseed a logical indicator. If `TRUE`, a seed is set through the
+#' argument `seed` below and passed to the function `rjaf_cpp`.
+#' The default value is `FALSE`.
+#' @param seed an integer used as a random seed if `setseed=TRUE`.
+#' The default value is 1.
+#' @param nfold the number of folds used for cross-validation in outcome
+#' residualization and k-means clustering. The default value is 5.
 #' 
 #' 
-#' @return If both `clus.tree.growing` and `clus.outcome.avg` are true, return list containing a tibble (named as "res") with ID, cluster number, 
-#' and predicted outcome, and a data frame (named as "clustering") with cluster number, probability of being assigned to the cluster, and treatment.
-#' If not, return a tibble with ID, treatment predicted by the regularized joint assignment forest, predicted outcome, and corresponding treatment outcome from the validation data.
+#' @return If both `clus.tree.growing` and `clus.outcome.avg` are true, return
+#' list containing a tibble (named as "res") with ID, cluster number, 
+#' and predicted outcome, and a data frame (named as "clustering") with cluster
+#' number, probability of being assigned to the cluster, and treatment.
+#' If not, return a tibble with ID, treatment predicted by the regularized joint
+#' assignment forest, predicted outcome, and corresponding treatment outcome from the validation data.
 
 #' @export
 #'
