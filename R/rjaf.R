@@ -75,7 +75,8 @@
 #'forest.reg2 <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = FALSE)
 #' 
 #' @references 
-#' Wu, Edward and Johann A Gagnon-Bartsch (2018). The LOOP Estimator: Adjusting for Covariates in Randomized Experiments. Evaluation Review, 42(4):458–488.
+#' Wu, Edward and Gagnon-Bartsch, Johann A (2018). The LOOP Estimator: Adjusting
+#' for Covariates in Randomized Experiments. Evaluation Review, 42(4):458–488.
 #' \cr
 #'
 
