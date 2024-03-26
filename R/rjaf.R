@@ -53,12 +53,12 @@
 #' @export
 #'
 #' @examples 
-#' data(Example.trainest)
-#' data(Example.valid)
-#' id <- "id"; trts <- as.character(0:K); y <- "Y"; trt <- "trt";  vars <- paste0("X", 1:3); prob <- "prob";
-#' forest.reg1 <- rjaf(Example.trainest, Example.valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = TRUE)
-#' forest.reg2 <- rjaf(Example.trainest, Example.valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = FALSE)
-#' 
+#'data(Example_data)
+#'Example_trainest <- Example_data %>% slice_sample(n = floor(0.3 * nrow(Example_data)))
+#'Example_valid <- Example_data %>% filter(!id %in% Example_trainest$id)
+#'id <- "id"; trts <- as.character(0:K); y <- "Y"; trt <- "trt";  vars <- paste0("X", 1:3); prob <- "prob";
+#'forest.reg1 <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = TRUE)
+#'forest.reg2 <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = FALSE)
 #' 
 #' @references 
 #' Wu, Edward and Johann A Gagnon-Bartsch (2018). The LOOP Estimator: Adjusting for Covariates in Randomized Experiments. Evaluation Review, 42(4):458–488.
