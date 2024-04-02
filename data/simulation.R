@@ -35,7 +35,7 @@ sim.data <- function(n, K, gamma, sigma, count=rep(1,K+1)) {
 }
 
 Example_data <- sim.data(n, K, gamma, sigma, count)
-saveRDS(Example_data, "data/Example_data.rda")
+save(Example_data, file="/Users/xinyizhang/Documents/GitHub/rjaf/data/Example_data.RData")
 
 
 n <- 100; K <- 5; gamma <- 10; sigma <- 10; prob = rep(1,K+1)/(K+1)
@@ -59,7 +59,7 @@ sim.data.non.clus <- function(n, K, gamma, sigma, prob=rep(1,K+1)/(K+1)) {
 }
 
 Example_data_non_clus <- sim.data.non.clus(n, K, gamma, sigma, prob)
-saveRDS(Example_data_non_clus, "data/Example_data_non_clus.rda")
+save(Example_data_non_clus, file = "data/Example_data_non_clus.RData")
 
 
 n <- 100; K <- 5; gamma <- 10; sigma <- 10; count <- rep(1, K+1)
@@ -97,4 +97,4 @@ sim.data.clus <- function(n, K, gamma, sigma, count=rep(1,K+1)) {
 }
 
 Example_data_clus <- sim.data.clus(n, K, gamma, sigma, count)
-saveRDS(Example_data_clus, "data/Example_data_clus.rda")
+save(Example_data_clus, file = "data/Example_data_clus.RData")
