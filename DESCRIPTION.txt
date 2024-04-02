@@ -1,0 +1,52 @@
+Package: rjaf
+Title: Regularized and Clustered Joint Assignment Forests
+Version: 1.0.0
+URL: https://github.com/wustat/rjaf
+BugReports: https://github.com/wustat/rjaf/issues
+Authors@R: 
+    c(person(given = "Wenbo",
+             family = "Wu",
+             email = "Wenbo.Wu@nyulangone.org", 
+             role = c("aut", "cph"),
+             comment = c(ORCID = "0000-0002-7642-9773")),
+      person(given = "Xinyi", 
+             family = "Zhang", 
+             email = "Xinyi.Zhang@nyulangone.org",
+             role = c("aut", "cre", "cph")),
+      person(given = "Jann",
+             family = "Spiess",
+             email = "jspiess@stanford.edu",
+             role = c("aut", "cph"),
+             comment = c(ORCID = "0000-0002-4120-8241")),
+      person(given = "Rahul",
+             family = "Ladhania",
+             email = "ladhania@umich.edu"),
+             role = c("aut", "cph")))
+Description: Personalized assignment to one of many treatment arms via regularized and clustered joint assignment forests as described in Ladhania, Spiess, Ungar, and Wu <arXiv:2311.00577>. 
+	     It considers a regularized forest-based assignment algorithm based on greedy recursive partitioning that shrinks effect estimates across arms and incorporates a clustering 
+             scheme that combines treatment arms with consistently similar outcomes.
+
+LinkingTo:
+    Rcpp,
+    RcppArmadillo
+Depends: 
+    R (>= 4.0)
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports: 
+    dplyr
+    tibble
+    stringr
+    magrittr
+    readr
+    tidyr
+    randomForest
+    ranger
+    forcats
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)

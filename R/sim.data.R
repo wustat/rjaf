@@ -15,7 +15,7 @@ sim.data <- function(n, K, gamma, sigma, count=rep(1,K+1)) {
            Y=tmp1+tmp2*(cl>0)*(2*cl-K-1)+tmp3*(cl==0)+rnorm(n,0,sigma),
            trt=str_c("c", cl, "t", cid))
   mapping <- data %>% distinct(trt, .keep_all=T) %>%
-    select(c(cl, cid, trt)) %>% arrange(trt)
+    dplyr::select(c(cl, cid, trt)) %>% arrange(trt)
   # Y: observed outcomes
   Y.cf.trt <- data.frame(sapply(mapping %>% pull(trt), function(t) {
     # counterfactural outcomes
