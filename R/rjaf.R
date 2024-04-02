@@ -7,7 +7,7 @@
 #' @param data.validation input data used for validation with the same row and
 #' column information as in `data.trainest`.
 #' @param y a character string denoting the column name of outcomes.
-#' @param id a character string denoting the column name of IDs.
+#' @param id a character string denoting the column name of individual IDs.
 #' @param trt a character string denoting the column name of treatments.
 #' @param vars a vector of character strings denoting the column names of covariates. 
 #' @param prob a character string denoting the column name of probabilities of
@@ -57,12 +57,14 @@
 #' residualization and k-means clustering. The default value is 5.
 #' 
 #' 
-#' @return If both `clus.tree.growing` and `clus.outcome.avg` are true, return
-#' list containing a tibble (named as "res") with ID, cluster number, 
-#' and predicted outcome, and a data frame (named as "clustering") with cluster
-#' number, probability of being assigned to the cluster, and treatment.
-#' If not, return a tibble with ID, treatment predicted by the regularized joint
-#' assignment forest, predicted outcome, and corresponding treatment outcome from the validation data.
+#' @return If `clus.tree.growing` and `clus.outcome.avg` are `TRUE`, `rjaf`
+#' returns a list of two objects: a tibble named as `res` consisting of individual
+#' IDs, cluster identifiers, and predicted outcomes, and a data frame named as
+#' `clustering` consisting of cluster identifiers, probabilities of being assigned
+#' to the clusters, and treatment arms. Otherwise, `rjaf` simply returns a tibble
+#' of individual IDs, treatment arms identified by the algorithm, and predicted
+#' outcomes. If counterfactual outcomes are also present, they will be included
+#' in the tibble along with the column of predicted outcomes (ending with `.rjaf`).
 
 #' @export
 #'
@@ -106,9 +108,7 @@
 #' 
 #' n <- 100; K <- 5; gamma <- 10; sigma <- 10
 #' count <- rep(1, K+1)
-#'
 #' Example_data <- sim.data(n, K, gamma, sigma, count)
-#'
 #' Example_trainest <- Example_data %>% slice_sample(n = floor(0.3 * nrow(Example_data)))
 #' Example_valid <- Example_data %>% filter(!id %in% Example_trainest$id)
 #' id <- "id"; trts <- as.character(0:K); y <- "Y"; trt <- "trt";  vars <- paste0("X", 1:3); prob <- "prob";
@@ -192,20 +192,22 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
              prop.train, epi, reg, impute, setseed, seed)
   if (clus.tree.growing & clus.outcome.avg) {
     res <- tibble(!!(id):=as.character(pull(data.validation, id)),
-                  cluster=as.character(clus[ls.forest$trt.dof]),
+                  cluster=as.character(clus[ls.forest$trt.rjaf]),
                   !!(paste0(y, ".pred")):=as.numeric(ls.forest$Y.pred))
     return(list(res=res, clustering=df))
   } else {
     res <- tibble(!!(id):=as.character(pull(data.validation, id)),
-                  !!(trt):=as.character(trts[ls.forest$trt.dof]),
+                  !!(trt):=as.character(trts[ls.forest$trt.rjaf]),
                   !!(paste0(y, ".pred")):=as.numeric(ls.forest$Y.pred))
     if (all(paste0(y, trts) %in% names(data.validation))) {
+      # all counterfactual outcomes are present
       res <- data.validation %>%
         dplyr::select(all_of(c(id, paste0(y, trts)))) %>%
-        pivot_longer(cols=paste0(y, trts), names_to=trt, names_prefix=y, values_to=y) %>%
+        pivot_longer(cols=paste0(y, trts), names_to=trt, names_prefix=y,
+                     values_to=y) %>%
         mutate(across(c(id, trt), as.character)) %>%
         inner_join(res, by=c(id, trt)) %>%
-        rename_with(~str_c(.,".dof"), all_of(c(y, trt)))
+        rename_with(~str_c(.,".rjaf"), all_of(c(y, trt)))
     }
     return(res)
   }

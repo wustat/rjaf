@@ -468,5 +468,5 @@ List rjaf_cpp(const arma::vec &y_trainest, const arma::mat &X_trainest,
     clus_pred(find(idx_clus==t)) += clus_uniq(t);
   }
   return List::create(_["Y.cf"]=outcome, _["Y.pred"]=max(outcome, 1),
-                      _["trt.dof"]=clus_pred);
+                      _["trt.rjaf"]=clus_pred);
 }
