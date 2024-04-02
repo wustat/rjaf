@@ -112,8 +112,7 @@
 #' Example_trainest <- Example_data %>% slice_sample(n = floor(0.3 * nrow(Example_data)))
 #' Example_valid <- Example_data %>% filter(!id %in% Example_trainest$id)
 #' id <- "id"; trts <- as.character(0:K); y <- "Y"; trt <- "trt";  vars <- paste0("X", 1:3); prob <- "prob";
-#' forest.reg1 <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = TRUE)
-#' forest.reg2 <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, prob, reg=T, clus.max = 3, clus.tree.growing = TRUE, clus.outcome.avg = FALSE)
+#' forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, prob, clus.max = 3)
 #'}
 #' @references 
 #' Wu, Edward and Gagnon-Bartsch, Johann A (2018). The LOOP Estimator: Adjusting
