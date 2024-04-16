@@ -1,9 +1,7 @@
 #' Regularized Joint Assignment Forest with Treatment Arm Clustering
 #' 
 #' Trains a joint forest model to estimate the optimal treatment assignment
-#' by pooling information across treatment arms
-#'
-#'
+#' by pooling information across treatment arms.
 #'
 #' @param data.trainest input data used for training and estimation, where each
 #' row corresponds to an individual and columns contain information on treatments,
