@@ -43,7 +43,7 @@
 #' outcomes towards the overall within-leaf average outcome during outcome estimation.
 #' It is only valid when `reg` is `TRUE`. The default value is 0.5.
 #' @param ipw a logical indicator of inverse probability weighting when calculating
-#' leaf-wise weighted averages based on Wu and Gartsch (2018). The default value is `TRUE`.
+#' leaf-wise weighted averages based on Wu and Gagnon-Bartsch (2018). The default value is `TRUE`.
 #' @param nodesize minimum number of observations in a terminal node. The default value is 5.
 #' @param ntree number of trees to grow in the forest. This should not be set to
 #' too small a number. The default value is 1000.
@@ -135,10 +135,18 @@
 #' forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, prob, clus.max = 3)
 #'}
 #' @references 
+#' Bonhomme, Stéphane and Manresa, Elena (2015). Grouped Patterns of Heterogeneity in Panel Data. Econometrica, 83: 1147-1184.
+#' \cr
+#' Kallus, Nathan (2017). Recursive Partitioning for Personalization using Observational Data. In Precup, Doina and Yee Whye Teh, editors, 
+#' Proceedings of the 34th International Conference on Machine Learning, volume 70 of Proceedings of Machine Learning Research, pages 1789–1798. PMLR.
+#' \cr
+#' Wager, Stefan and Athey, Susan (2018). Estimation and inference of heterogeneous treatment effects
+#' using random forests. Journal of the American Statistical Association, 113(523):1228–1242.
+#' \cr
 #' Wu, Edward and Gagnon-Bartsch, Johann A (2018). The LOOP Estimator: Adjusting
 #' for Covariates in Randomized Experiments. Evaluation Review, 42(4):458–488.
 #' \cr
-#'
+#' 
 
 rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                  ntrt=5, nvar=3, lambda1=0.5, lambda2=0.5, ipw=TRUE,
