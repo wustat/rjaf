@@ -1,14 +1,23 @@
 #' Regularized Joint Assignment Forest with Treatment Arm Clustering
 #' 
 #' Trains a joint forest model to estimate the optimal treatment assignment
-#' by pooling information across treatment arms. 
+#' by pooling information across treatment arms 
 #'
-#' Obtains an assignment forest by bagging many trees as in Kallus (2017),
-#' and estimating honest estimates of the treatment-specific counterfactual outcomes
+#' Obtains an assignment forest by bagging trees as in Kallus (2017) with 
+#' covariate and treatment arm randomization for each tree
+#' and estimating "honest" estimates of the treatment-specific counterfactual outcomes
 #' on the training sample following Wager and Athey (2018)
-#' Implements a simple clustering scheme that partitions the K+1 treatment arms into M+1 groups 
-#' Employs a $k$-means algorithm for clustering the $K+1$ arms into $M+1$ groups
 #'
+#' Implements a simple clustering scheme that partitions the K+1 treatment arms into M+1 groups 
+#' Employs a k-means algorithm for clustering the K+1 treatment arms into M+1 treatment groups 
+#' based on the K+1 predictions for each of the units in the training sample
+#'
+#' Repeat the assignment-forest algorithm on the full training data  with M+1 "arms"
+#' (where data from the original arms are combined by groups) to obtain an ensemble of trees
+#'
+#' Obtain final regularized predictions and assignments, where we now go back to estimating 
+#' regularized averages separately by the original treatment arms $k \in \{0,\ldots,K\}$ 
+#' and obtain the corresponding assignment
 #'
 #' @param data.trainest input data used for training and estimation, where each
 #' row corresponds to an individual and columns contain information on treatments,
