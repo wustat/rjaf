@@ -1,25 +1,25 @@
 #' Regularized Joint Assignment Forest with Treatment Arm Clustering
 #' 
-#' Trains a joint forest model to estimate the optimal treatment assignment
-#' by pooling information across treatment arms 
+#' This algorithm trains a joint forest model to estimate the optimal treatment assignment
+#' by pooling information across treatment arms.
 #'
-#' Obtains an assignment forest by bagging trees as in Kallus (2017) with 
+#' It first obtains an assignment forest by bagging trees as in Kallus (2017) with 
 #' covariate and treatment arm randomization for each tree
-#' and estimating "honest" estimates of the treatment-specific counterfactual outcomes
-#' on the training sample following Wager and Athey (2018)
+#' and estimating "honest" and regularized estimates of the treatment-specific counterfactual outcomes
+#' on the training sample following Wager and Athey (2018).
 #'
-#' Employs a k-means algorithm for clustering the K treatment arms into M treatment groups 
-#' based on the K predictions for each of the n units in the training sample
+#' Like Bonhomme and Manresa (2015), it uses a clustering of treatment arms when 
+#' constructing the assignment trees. It employs a k-means algorithm for
+#' clustering the K treatment arms into M treatment groups 
+#' based on the K predictions for each of the n units in the training sample.
 #'
-#' Repeat the assignment-forest algorithm on the full training data  with M+1 (including control) "arms"
-#' (where data from the original arms are combined by groups) to obtain an ensemble of trees
+#' After clustering, it then repeats the assignment-forest algorithm on the full training data 
+#' with M+1 (including control) "arms" (where data from the original arms are combined by groups) 
+#' to obtain an ensemble of trees.
 #'
-#' Obtain final regularized predictions and assignments, where we now go back to estimating 
+#' It obtains final regularized predictions and assignments, where it estimates 
 #' regularized averages separately by the original treatment arms $k \in \{0,\ldots,K\}$ 
-#' and obtain the corresponding assignment
-#'
-#' Like Bonhomme and Manresa (2015), use a clustering of treatment arms when constructing the assignment
-#' trees, but still provides arm-specific estimates from the resulting forest
+#' and obtain the corresponding assignment.
 #'
 #' @param data.trainest input data used for training and estimation, where each
 #' row corresponds to an individual and columns contain information on treatments,
