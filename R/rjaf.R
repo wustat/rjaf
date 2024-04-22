@@ -18,6 +18,9 @@
 #' regularized averages separately by the original treatment arms $k \in \{0,\ldots,K\}$ 
 #' and obtain the corresponding assignment
 #'
+#' Algorithm uses a clustering of treatment arms when constructing the assignment
+#' trees, but still provides arm-specific estimates from the resulting forest
+#'
 #' @param data.trainest input data used for training and estimation, where each
 #' row corresponds to an individual and columns contain information on treatments,
 #' covariates, probabilities of treatment assignment, and observed outcomes.
