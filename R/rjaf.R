@@ -18,8 +18,7 @@
 #' regularized averages separately by the original treatment arms $k \in \{0,\ldots,K\}$ 
 #' and obtain the corresponding assignment
 #'
-#' Like Bonhomme and Manresa (2015) and Bonhomme et al. (2022)
-#' Use a clustering of treatment arms when constructing the assignment
+#' Like Bonhomme and Manresa (2015), use a clustering of treatment arms when constructing the assignment
 #' trees, but still provides arm-specific estimates from the resulting forest
 #'
 #' @param data.trainest input data used for training and estimation, where each
