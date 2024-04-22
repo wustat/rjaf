@@ -8,11 +8,10 @@
 #' and estimating "honest" estimates of the treatment-specific counterfactual outcomes
 #' on the training sample following Wager and Athey (2018)
 #'
-#' Implements a simple clustering scheme that partitions the K+1 treatment arms into M+1 groups 
-#' Employs a k-means algorithm for clustering the K+1 treatment arms into M+1 treatment groups 
-#' based on the K+1 predictions for each of the units in the training sample
+#' Employs a k-means algorithm for clustering the K treatment arms into M treatment groups 
+#' based on the K predictions for each of the n units in the training sample
 #'
-#' Repeat the assignment-forest algorithm on the full training data  with M+1 "arms"
+#' Repeat the assignment-forest algorithm on the full training data  with M+1 (including control) "arms"
 #' (where data from the original arms are combined by groups) to obtain an ensemble of trees
 #'
 #' Obtain final regularized predictions and assignments, where we now go back to estimating 
