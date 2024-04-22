@@ -134,16 +134,17 @@
 #' id <- "id"; trts <- as.character(0:K); y <- "Y"; trt <- "trt";  vars <- paste0("X", 1:3); prob <- "prob";
 #' forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, prob, clus.max = 3)
 #'}
+#'
 #' @references 
-#' Bonhomme, Stéphane and Manresa, Elena (2015). Grouped Patterns of Heterogeneity in Panel Data. Econometrica, 83: 1147-1184.
+#' Bonhomme, Stéphane and Elena Manresa (2015). Grouped Patterns of Heterogeneity in Panel Data. Econometrica, 83: 1147-1184.
 #' \cr
 #' Kallus, Nathan (2017). Recursive Partitioning for Personalization using Observational Data. In Precup, Doina and Yee Whye Teh, editors, 
 #' Proceedings of the 34th International Conference on Machine Learning, volume 70 of Proceedings of Machine Learning Research, pages 1789–1798. PMLR.
 #' \cr
-#' Wager, Stefan and Athey, Susan (2018). Estimation and inference of heterogeneous treatment effects
+#' Wager, Stefan and Susan Athey (2018). Estimation and inference of heterogeneous treatment effects
 #' using random forests. Journal of the American Statistical Association, 113(523):1228–1242.
 #' \cr
-#' Wu, Edward and Gagnon-Bartsch, Johann A (2018). The LOOP Estimator: Adjusting
+#' Wu, Edward and Johann A Gagnon-Bartsch (2018). The LOOP Estimator: Adjusting
 #' for Covariates in Randomized Experiments. Evaluation Review, 42(4):458–488.
 #' \cr
 #' 
