@@ -1,6 +1,11 @@
 Package: rjaf
+<<<<<<< Updated upstream
 Title: Regularized Joint Assignment Forest with Treatment Arm Clustering
 Version: 0.1.0
+=======
+Title: Regularized and Clustered Joint Assignment Forests
+Version: 0.1.0 
+>>>>>>> Stashed changes
 URL: https://github.com/wustat/rjaf
 BugReports: https://github.com/wustat/rjaf/issues
 Authors@R: 
@@ -30,21 +35,23 @@ LinkingTo:
     RcppArmadillo
 Depends: 
     R (>= 3.0)
-License: GPL-3
+License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
 Imports:
+    Rcpp,
     dplyr,
     tibble,
     stringr,
     magrittr,
     readr,
-    tidyr,
     randomForest,
     ranger,
-    forcats
+    forcats,
+    rlang (>= 1.1.0),
+    tidyr
 Suggests: 
     knitr,
     rmarkdown,

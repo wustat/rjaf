@@ -24,7 +24,7 @@
 #' Example_trainest <- Example_data %>% slice_sample(n = floor(0.3 * nrow(Example_data)))
 #' y <- "Y"
 #' vars <- paste0("X", 1:3)
-#' Example_resid <- residualize(Example.trainest, y, vars, nfold = 5, fun.rf = "ranger")
+#' Example_resid <- residualize(Example_trainest, y, vars, nfold = 5, fun.rf = "ranger")
 #' }
 #'
 #' 
@@ -33,19 +33,19 @@ residualize <- function(data, y, vars, nfold=5, fun.rf="ranger") {
   data$fold <- sample(1:nfold, NROW(data), T, rep(1, nfold))
   if (fun.rf=="randomForest") {
     dplyr::select(bind_rows(lapply(1:nfold, function(i) {
-      data.i <- filter(data, fold==i)
+      data.i <- filter(data, data$fold==i)
       data.i[,y] <- data.i[,y] -
         predict(randomForest::randomForest(
           as.formula(paste(y, "~", paste0(vars, collapse="+"))),
-          filter(data, fold!=i)), data.i)
-      data.i})), -fold)
+          filter(data, data$fold!=i)), data.i)
+      data.i})), -.data$fold)
   } else if (fun.rf=="ranger") {
     dplyr::select(bind_rows(lapply(1:nfold, function(i) {
-      data.i <- filter(data, fold==i)
+      data.i <- filter(data, data$fold==i)
       data.i[,y] <- data.i[,y] -
         predict(ranger::ranger(
           as.formula(paste(y, "~", paste0(vars, collapse="+"))),
-          filter(data, fold!=i)), data.i)[["predictions"]]
-      data.i})), -fold)
+          filter(data, data$fold!=i)), data.i)[["predictions"]]
+      data.i})), -.data$fold)
   }
 }

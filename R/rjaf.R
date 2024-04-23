@@ -18,7 +18,7 @@
 #' to obtain an ensemble of trees.
 #'
 #' It obtains final regularized predictions and assignments, where it estimates 
-#' regularized averages separately by the original treatment arms $k \in \{0,\ldots,K\}$ 
+#' regularized averages separately by the original treatment arms $k \\in \\{0,\ldots,K\\}$ 
 #' and obtain the corresponding assignment.
 #'
 #' @param data.trainest input data used for training and estimation, where each
@@ -137,7 +137,10 @@
 #'}
 #'
 #' @useDynLib rjaf, .registration=TRUE
-#' @importFrom Rcpp evalCpp
+#' @importFrom Rcpp evalCpp 
+#' @importFrom stats kmeans as.formula predict
+#' @importFrom rlang :=
+#' @import dplyr forcats magrittr readr tibble
 #'
 #' @references 
 #' Bonhomme, Stéphane and Elena Manresa (2015). Grouped Patterns of Heterogeneity in Panel Data. Econometrica, 83: 1147-1184.
@@ -171,8 +174,8 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
     ls.kmeans <- lapply(2:clus.max, function(i)
       stats::kmeans(
         t(do.call(rbind, lapply(1:nfold, function(k) {
-          data.onefold <- filter(data.trainest, fold==k)
-          data.rest <- filter(data.trainest, fold!=k)
+          data.onefold <- filter(data.trainest, data.trainest$fold==k)
+          data.rest <- filter(data.trainest, data.trainest$fold!=k)
           rjaf_cpp(pull(data.rest, y),
                    as.matrix(select(data.rest, all_of(vars))),
                    as.integer(factor(pull(data.rest, trt),
@@ -198,7 +201,7 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
     clus <- unique(pull(data.trainest, cluster))
     str.tree.growing <- as.integer(factor(pull(data.trainest, cluster),
                                           as.character(clus)))
-    prob.tree.growing <- pull(data.trainest, prob_cluster)
+    prob.tree.growing <- pull(data.trainest, data.trainest$prob_cluster)
     nstr <- length(unique(cluster))
     if (clus.outcome.avg) {
       str.outcome.avg <- as.integer(factor(pull(data.trainest, cluster),
@@ -235,7 +238,7 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
       # all counterfactual outcomes are present
       res <- data.validation %>%
         dplyr::select(all_of(c(id, paste0(y, trts)))) %>%
-        pivot_longer(cols=paste0(y, trts), names_to=trt, names_prefix=y,
+        tidyr::pivot_longer(cols=paste0(y, trts), names_to=trt, names_prefix=y,
                      values_to=y) %>%
         mutate(across(c(id, trt), as.character)) %>%
         inner_join(res, by=c(id, trt)) %>%

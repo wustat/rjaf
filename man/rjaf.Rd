@@ -142,7 +142,7 @@ with M+1 (including control) "arms" (where data from the original arms are combi
 to obtain an ensemble of trees.
 
 It obtains final regularized predictions and assignments, where it estimates
-regularized averages separately by the original treatment arms $k \in \{0,\ldots,K\}$
+regularized averages separately by the original treatment arms $k \\in \\{0,\ldots,K\\}$
 and obtain the corresponding assignment.
 }
 \examples{
