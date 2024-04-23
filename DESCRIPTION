@@ -1,11 +1,6 @@
 Package: rjaf
-<<<<<<< Updated upstream
 Title: Regularized Joint Assignment Forest with Treatment Arm Clustering
 Version: 0.1.0
-=======
-Title: Regularized and Clustered Joint Assignment Forests
-Version: 0.1.0 
->>>>>>> Stashed changes
 URL: https://github.com/wustat/rjaf
 BugReports: https://github.com/wustat/rjaf/issues
 Authors@R: 
