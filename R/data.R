@@ -6,7 +6,7 @@
 #'
 #' @format A data frame with 100 rows and 21 columns 
 #' \describe{
-#'   \item{id}{Bbservation ID}
+#'   \item{id}{Observation ID}
 #'   \item{cl}{Assigned cluster number}
 #'   \item{cid}{Cluster-specific identifier for each observation within its cluster. It is assigned based on the cluster assignment ``cl`` and the ``count`` parameter.}
 #'   \item{X1...X3}{Covariates with each observation}
