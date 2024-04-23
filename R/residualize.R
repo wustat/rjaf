@@ -19,11 +19,13 @@
 #' @export 
 #'
 #' @examples 
+#' \dontrun{
 #' data(Example_data)
 #' Example_trainest <- Example_data %>% slice_sample(n = floor(0.3 * nrow(Example_data)))
 #' y <- "Y"
 #' vars <- paste0("X", 1:3)
 #' Example_resid <- residualize(Example.trainest, y, vars, nfold = 5, fun.rf = "ranger")
+#' }
 #'
 #' 
 

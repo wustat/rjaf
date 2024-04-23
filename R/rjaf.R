@@ -91,7 +91,7 @@
 #' @examples
 #' 
 #' 
-#'\donotrun{
+#'\dontrun{
 #' sim.data <- function(n, K, gamma, sigma, count=rep(1,K+1)) {
 #'   # K: number of clusters
 #'   options(stringsAsFactors=F)
@@ -131,9 +131,13 @@
 #' Example_data <- sim.data(n, K, gamma, sigma, count)
 #' Example_trainest <- Example_data %>% slice_sample(n = floor(0.3 * nrow(Example_data)))
 #' Example_valid <- Example_data %>% filter(!id %in% Example_trainest$id)
-#' id <- "id"; trts <- as.character(0:K); y <- "Y"; trt <- "trt";  vars <- paste0("X", 1:3); prob <- "prob";
+#' id <- "id"; trts <- as.character(0:K); y <- "Y"; trt <- "trt";  
+#' vars <- paste0("X", 1:3); prob <- "prob";
 #' forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, prob, clus.max = 3)
 #'}
+#'
+#' @useDynLib rjaf, .registration=TRUE
+#' @importFrom Rcpp evalCpp
 #'
 #' @references 
 #' Bonhomme, Stéphane and Elena Manresa (2015). Grouped Patterns of Heterogeneity in Panel Data. Econometrica, 83: 1147-1184.
