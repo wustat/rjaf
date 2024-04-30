@@ -1,8 +1,9 @@
 #' Simulated randomized experiment data with clustering I
 #' 
-#' A data set where each row corresponds to an individual and columns contain information on treatments,
-#' covariates, probabilities of treatment assignment, and observed outcomes. 
-#' This simulation give more weights to X1 when determining the outcome and it is the approach used in simulations performed in manuscript.
+#' A data set where each row corresponds to an individual and columns contain
+#' information on treatments, covariates, probabilities of treatment assignment,
+#' counterfactual outcomes, and observed outcomes. This simulation gives more weights to X1 when determining
+#' the outcome and it is the approach used in simulations performed in manuscript.
 #'
 #' @format A data frame with 100 rows and 21 columns 
 #' \describe{
@@ -86,6 +87,3 @@
 #'   \item{Y5}{Counterfactual outcome for the scenario where an observation is assigned to treatment 5}
 #' }
 "Example_data_non_clus"
-
-
-
