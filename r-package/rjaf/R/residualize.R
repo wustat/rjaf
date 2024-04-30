@@ -4,8 +4,9 @@
 #' This function employs random forests and cross-validation to residualize
 #' outcomes following Wu and Gagnon-Bartsch (2018).
 #' That is, predicted outcomes resulting from random forests are
-#' subtracted from the original outcomes. Doing so, part of the variation in
-#' outcomes common across treatment arms can be removed.
+#' subtracted from the original outcomes. Doing so helps in adjusting for small imbalanaces
+#' in baseline covariates and removing part of the variation in
+#' outcomes common across treatment arms
 #' 
 #' @param data input data used for training and estimation, where each
 #' row corresponds to an individual and columns contain information on treatments,
