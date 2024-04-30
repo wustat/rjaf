@@ -82,8 +82,8 @@
 #' IDs, cluster identifiers, and predicted outcomes, and a data frame named as
 #' `clustering` consisting of cluster identifiers, probabilities of being assigned
 #' to the clusters, and treatment arms. Otherwise, `rjaf` simply returns a tibble
-#' of individual IDs, treatment arms identified by the algorithm, and predicted
-#' outcomes. If counterfactual outcomes are also present, they will be included
+#' of individual IDs, optimal treatment arms identified by the algorithm, and predicted
+#' optimal outcomes. If counterfactual outcomes are also present, they will be included
 #' in the tibble along with the column of predicted outcomes (ending with `.rjaf`).
 
 #' @export
