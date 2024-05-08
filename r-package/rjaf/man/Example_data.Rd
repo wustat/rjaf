@@ -34,8 +34,9 @@ A data frame with 100 rows and 21 columns
 Example_data
 }
 \description{
-A data set where each row corresponds to an individual and columns contain information on treatments,
-covariates, probabilities of treatment assignment, and observed outcomes.
-This simulation give more weights to X1 when determining the outcome and it is the approach used in simulations performed in manuscript.
+A data set where each row corresponds to an individual and columns contain
+information on treatments, covariates, probabilities of treatment assignment,
+counterfactual outcomes, and observed outcomes. This simulation gives more weights to X1 when determining
+the outcome and it is the approach used in simulations performed in manuscript.
 }
 \keyword{datasets}

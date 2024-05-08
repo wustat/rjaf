@@ -25,9 +25,11 @@ data for training and estimation with residualized outcomes.
 }
 \description{
 This function employs random forests and cross-validation to residualize
-outcomes. That is, predicted outcomes resulting from random forests are
-subtracted from the original outcomes. Doing so, part of the variation in
-outcomes common across treatment arms can be removed.
+outcomes following Wu and Gagnon-Bartsch (2018).
+That is, predicted outcomes resulting from random forests are
+subtracted from the original outcomes. Doing so helps in adjusting for small imbalanaces
+in baseline covariates and removing part of the variation in
+outcomes common across treatment arms
 }
 \examples{
 \dontrun{
@@ -38,5 +40,9 @@ vars <- paste0("X", 1:3)
 Example_resid <- residualize(Example_trainest, y, vars, nfold = 5, fun.rf = "ranger")
 }
 
-
+}
+\references{
+Wu, Edward and Johann A Gagnon-Bartsch (2018). The LOOP Estimator: Adjusting
+for Covariates in Randomized Experiments. Evaluation Review, 42(4):458–488.
+\cr
 }
