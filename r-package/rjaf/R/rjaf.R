@@ -170,8 +170,9 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
   if (resid) data.trainest <- residualize(data.trainest, y, vars, nfold)
   if (clus.tree.growing) {
     if (clus.max>length(trts) | clus.max<2) stop("Invalid clus.max!")
+    fold = sample(1:nfold, NROW(data.trainest), T, rep(1, nfold))
     data.trainest <- data.trainest %>%
-      mutate(fold=sample(1:nfold, NROW(data.trainest), T, rep(1, nfold)))
+      mutate(fold=fold)
     ls.kmeans <- lapply(2:clus.max, function(i)
       stats::kmeans(
         t(do.call(rbind, lapply(1:nfold, function(k) {
@@ -202,7 +203,7 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
     clus <- unique(pull(data.trainest, cluster))
     str.tree.growing <- as.integer(factor(pull(data.trainest, cluster),
                                           as.character(clus)))
-    prob.tree.growing <- data.trainest %>% pull(prob_cluster)
+    prob.tree.growing <- data.trainest %>% pull(.data$prob_cluster)
     nstr <- length(unique(cluster))
     if (clus.outcome.avg) {
       str.outcome.avg <- as.integer(factor(pull(data.trainest, cluster),
