@@ -39,14 +39,14 @@ Imports:
     Rcpp,
     dplyr,
     tibble,
-    stringr,
     magrittr,
     readr,
     randomForest,
     ranger,
     forcats,
     rlang (>= 1.1.0),
-    tidyr
+    tidyr,
+    stringr
 Suggests: 
     knitr,
     rmarkdown,

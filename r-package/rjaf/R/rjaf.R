@@ -140,7 +140,7 @@
 #' @importFrom Rcpp evalCpp 
 #' @importFrom stats kmeans as.formula predict
 #' @importFrom rlang :=
-#' @import dplyr forcats magrittr readr tibble
+#' @import dplyr forcats magrittr readr tibble stringr
 #'
 #' @references 
 #' Bonhomme, Stéphane and Elena Manresa (2015). Grouped Patterns of Heterogeneity in Panel Data. Econometrica, 83: 1147-1184.
