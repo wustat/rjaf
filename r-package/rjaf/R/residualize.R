@@ -37,12 +37,7 @@
 
 residualize <- function(data, y, vars, nfold=5, fun.rf="ranger") {
   fold <- sample(1:nfold, NROW(data), T, rep(1, nfold))
-<<<<<<< HEAD
   data <- data %>% mutate(fold=fold)
-=======
-  data <- data %>% 
-    mutate(fold = fold)
->>>>>>> b22ad76110a8ead41a96b38312ab96dbe9dca6e2
   if (fun.rf=="randomForest") {
     lapply(1:nfold, function(i) {
       data.i <- data %>% filter(fold==i)
