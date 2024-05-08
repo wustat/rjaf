@@ -29,7 +29,7 @@
 #' Example_resid <- residualize(Example_trainest, y, vars, nfold = 5, fun.rf = "ranger")
 #' }
 #'
-#' @references
+#' @references 
 #' Wu, Edward and Johann A Gagnon-Bartsch (2018). The LOOP Estimator: Adjusting
 #' for Covariates in Randomized Experiments. Evaluation Review, 42(4):458–488.
 #' \cr
@@ -37,7 +37,12 @@
 
 residualize <- function(data, y, vars, nfold=5, fun.rf="ranger") {
   fold <- sample(1:nfold, NROW(data), T, rep(1, nfold))
+<<<<<<< HEAD
   data <- data %>% mutate(fold=fold)
+=======
+  data <- data %>% 
+    mutate(fold = fold)
+>>>>>>> b22ad76110a8ead41a96b38312ab96dbe9dca6e2
   if (fun.rf=="randomForest") {
     lapply(1:nfold, function(i) {
       data.i <- data %>% filter(fold==i)
