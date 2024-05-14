@@ -7,7 +7,7 @@
 #' \describe{
 #'   \item{id}{Subject ID.}
 #'   \item{trt}{Character strings indicating treatment arms (0, 1, 2, 3, and 4)
-#'   assigned to subjects.}
+#'   assigned to subjects, where arm 0 is considered to be the control.}
 #'   \item{X1}{Covariate X1.}
 #'   \item{X2}{Covariate X2.}
 #'   \item{X3}{Covariate X3.}
