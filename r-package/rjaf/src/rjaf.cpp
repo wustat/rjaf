@@ -302,7 +302,11 @@ List growTree(const arma::vec &y_trainest, const arma::mat &X_trainest,
       arma::uvec ids_est = filter_est[node2split-1];
       arma::uvec ids_val = filter_val[node2split-1];
       arma::uvec trt_tmp = trt(ids); // trt column of the subsample
-      arma::uvec trt_sub = Rcpp::RcppArmadillo::sample(trt_uniq, ntrts, false);
+      arma::uvec trt_sub;
+      if( trt_uniq.n_elem < ntrts ){ 
+        stop("Selected number of unique treatments is less than the total number of treatments available"); } 
+      else{ 
+        trt_sub = Rcpp::RcppArmadillo::sample(trt_uniq, ntrts, false); }
       arma::uvec var_sub = Rcpp::RcppArmadillo::sample(arma::regspace<arma::uvec>(0, X.n_cols-1),
                                                        nvars, false);
       // ids only with selected treatment levels
