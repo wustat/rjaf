@@ -11,8 +11,8 @@
 #' @param data input data used for training and estimation, where each
 #' row corresponds to an individual and columns contain information on treatments,
 #' covariates, probabilities of treatment assignment, and observed outcomes.
-#' @param y a character string indicating the column name of outcomes.
-#' @param vars a vector of character strings indicating the column names of covariates.
+#' @param y a character string denoting the column name of outcomes.
+#' @param vars a vector of character strings denoting the column names of covariates.
 #' @param nfold number of folds in cross-validation. The default value is 5.
 #' @param fun.rf a character string specifying which random forest package to use.
 #' Two options are `ranger` and `randomForest`, with the default being `ranger`.
@@ -23,7 +23,7 @@
 #' @examples 
 #' \dontrun{
 #' data(Example_data)
-#' Example_trainest <- Example_data %>% slice_sample(n = floor(0.3 * nrow(Example_data)))
+#' Example_trainest <- Example_data %>% slice_sample(n = floor(0.5 * nrow(Example_data)))
 #' y <- "Y"
 #' vars <- paste0("X", 1:3)
 #' Example_resid <- residualize(Example_trainest, y, vars, nfold = 5, fun.rf = "ranger")

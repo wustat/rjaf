@@ -130,12 +130,15 @@
 #' @references 
 #' Bonhomme, Stéphane and Elena Manresa (2015). Grouped Patterns of Heterogeneity in Panel Data. Econometrica, 83: 1147-1184.
 #' \cr
+#' 
 #' Kallus, Nathan (2017). Recursive Partitioning for Personalization using Observational Data. In Precup, Doina and Yee Whye Teh, editors, 
 #' Proceedings of the 34th International Conference on Machine Learning, volume 70 of Proceedings of Machine Learning Research, pages 1789–1798. PMLR.
 #' \cr
+#' 
 #' Wager, Stefan and Susan Athey (2018). Estimation and inference of heterogeneous treatment effects
 #' using random forests. Journal of the American Statistical Association, 113(523):1228–1242.
 #' \cr
+#' 
 #' Wu, Edward and Johann A Gagnon-Bartsch (2018). The LOOP Estimator: Adjusting
 #' for Covariates in Randomized Experiments. Evaluation Review, 42(4):458–488.
 #' \cr
