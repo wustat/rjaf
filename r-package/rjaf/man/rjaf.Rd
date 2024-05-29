@@ -119,7 +119,7 @@ IDs, cluster identifiers, and predicted outcomes, and a data frame named as
 \code{clustering} consisting of cluster identifiers, probabilities of being assigned
 to the clusters, and treatment arms. Otherwise, \code{rjaf} simply returns a tibble
 of individual IDs, optimal treatment arms identified by the algorithm, and predicted
-optimal outcomes. If counterfactual outcomes are also present, they will be included
+optimal outcomes (ending with \code{.pred}). If counterfactual outcomes are also present, they will be included
 in the tibble along with the column of predicted outcomes (ending with \code{.rjaf}).
 }
 \description{
@@ -142,7 +142,7 @@ with M+1 (including control) "arms" (where data from the original arms are combi
 to obtain an ensemble of trees.
 
 It obtains final regularized predictions and assignments, where it estimates
-regularized averages separately by the original treatment arms k \\in \\{0,\ldots,K\\}
+regularized averages separately by the original treatment arms \eqn{k \in \{0,\ldots,K\}}
 and obtain the corresponding assignment.
 }
 \examples{
@@ -170,7 +170,7 @@ sim.data <- function(n, K, gamma, sigma, prob=rep(1,K+1)/(K+1)) {
 
 n <- 1000; K <- 4; gamma <- 10; sigma <- 10
 Example_data <- sim.data(n, K, gamma, sigma)
-Example_trainest <- Example_data \%>\% slice_sample(n = floor(0.3 * nrow(Example_data)))
+Example_trainest <- Example_data \%>\% slice_sample(n = floor(0.5 * nrow(Example_data)))
 Example_valid <- Example_data \%>\% filter(!id \%in\% Example_trainest$id)
 id <- "id"; y <- "Y"; trt <- "trt";  
 vars <- paste0("X", 1:3); prob <- "prob";

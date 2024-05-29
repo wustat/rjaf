@@ -18,7 +18,7 @@
 #' to obtain an ensemble of trees.
 #'
 #' It obtains final regularized predictions and assignments, where it estimates 
-#' regularized averages separately by the original treatment arms $k \\in \\{0,\ldots,K\\}$
+#' regularized averages separately by the original treatment arms \eqn{k \in \{0,\ldots,K\}}
 #' and obtain the corresponding assignment.
 #'
 #' @param data.trainest input data used for training and estimation, where each
@@ -113,7 +113,7 @@
 #' 
 #' n <- 1000; K <- 4; gamma <- 10; sigma <- 10
 #' Example_data <- sim.data(n, K, gamma, sigma)
-#' Example_trainest <- Example_data %>% slice_sample(n = floor(0.3 * nrow(Example_data)))
+#' Example_trainest <- Example_data %>% slice_sample(n = floor(0.5 * nrow(Example_data)))
 #' Example_valid <- Example_data %>% filter(!id %in% Example_trainest$id)
 #' id <- "id"; y <- "Y"; trt <- "trt";  
 #' vars <- paste0("X", 1:3); prob <- "prob";
