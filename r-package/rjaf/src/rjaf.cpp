@@ -254,6 +254,9 @@ List growTree(const arma::vec &y_trainest, const arma::mat &X_trainest,
   // utility at root: begin
   arma::uvec trt_uniq = sort(unique(trt));
   unsigned int ntrt = trt_uniq.n_elem;
+  if (trt_uniq.n_elem < ntrts) {
+    stop("The number of unique treatment arms or clusters in the training set is less than the number of treatment arms or clusters specified!");
+  } 
   arma::vec numer(ntrt), denom(ntrt), probs(ntrt);
   arma::uvec count(ntrt);
   for (unsigned int t = 0; t < ntrt; ++t) {
@@ -295,7 +298,7 @@ List growTree(const arma::vec &y_trainest, const arma::mat &X_trainest,
   double mingain = epi*stddev(y);
   do {
     std::set<unsigned int> nodes2split_tmp = nodes2split;
-    for ( std::set<unsigned int>::iterator i=nodes2split_tmp.begin();
+    for (std::set<unsigned int>::iterator i=nodes2split_tmp.begin();
           i!=nodes2split_tmp.end(); ++i) {
       unsigned int node2split = *i; // node to split on
       arma::uvec ids = filter[node2split-1]; // zero-index in C++
@@ -303,12 +306,9 @@ List growTree(const arma::vec &y_trainest, const arma::mat &X_trainest,
       arma::uvec ids_val = filter_val[node2split-1];
       arma::uvec trt_tmp = trt(ids); // trt column of the subsample
       arma::uvec trt_sub;
-      if( trt_uniq.n_elem < ntrts ){ 
-        stop("Selected number of unique treatments is less than the total number of treatments available"); } 
-      else{ 
-        trt_sub = Rcpp::RcppArmadillo::sample(trt_uniq, ntrts, false); }
-      arma::uvec var_sub = Rcpp::RcppArmadillo::sample(arma::regspace<arma::uvec>(0, X.n_cols-1),
-                                                       nvars, false);
+      trt_sub = Rcpp::RcppArmadillo::sample(trt_uniq, ntrts, false);
+      arma::uvec var_sub = Rcpp::RcppArmadillo::sample(
+        arma::regspace<arma::uvec>(0, X.n_cols-1), nvars, false);
       // ids only with selected treatment levels
       arma::uvec ids4split = ids(index_subset(trt_tmp, trt_sub));
       List split; int var_id;
