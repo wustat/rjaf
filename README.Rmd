@@ -19,6 +19,7 @@ knitr::opts_chunk$set(
 > Regularized and Clustered Joint Assignment Forests
 
 Wenbo Wu, Xinyi Zhang, Jann Spiess, Rahul Ladhania
+
 ---
 ## Introduction
 
