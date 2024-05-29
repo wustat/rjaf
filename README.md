@@ -26,22 +26,6 @@ we introduce the use of **rjaf** through an example dataset.
 require("devtools")
 require("remotes")
 devtools::install_github("wustat/rjaf", subdir = "r-package/rjaf")
-#> 
-#> ── R CMD build ─────────────────────────────────────────────────────────────────
-#>      checking for file ‘/private/var/folders/1x/lks20w591vq8dq0_rqp744dc0000gn/T/RtmpfdNxLZ/remotes30b216bd00c2/wustat-rjaf-3ac2518/r-package/rjaf/DESCRIPTION’ ...  ✔  checking for file ‘/private/var/folders/1x/lks20w591vq8dq0_rqp744dc0000gn/T/RtmpfdNxLZ/remotes30b216bd00c2/wustat-rjaf-3ac2518/r-package/rjaf/DESCRIPTION’
-#>   ─  preparing ‘rjaf’:
-#>      checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
-#>   ─  cleaning src
-#>   ─  checking for LF line-endings in source and make files and shell scripts
-#>   ─  checking for empty or unneeded directories
-#>        NB: this package now depends on R (>= 3.5.0)
-#>        WARNING: Added dependency on R >= 3.5.0 because serialized objects in
-#>      serialize/load version 3 cannot be read in older versions of R.
-#>      File(s) containing such objects:
-#>        ‘rjaf/data/Example_data.RData’
-#>   ─  building ‘rjaf_0.1.0.tar.gz’
-#>      
-#> 
 ```
 
 ## What is regularized and clustered joint assignment forest (rjaf)?
@@ -117,12 +101,12 @@ head(forest.reg)
 #> # A tibble: 6 × 4
 #>   id    trt.rjaf Y.rjaf Y.pred
 #>   <chr> <chr>     <dbl>  <dbl>
-#> 1 1     4             0   7.09
-#> 2 2     1             0  11.5 
-#> 3 4     4           -20   7.11
-#> 4 8     1            20  11.5 
-#> 5 10    4            20   7.21
-#> 6 11    1           -20  11.5
+#> 1 5     1           -20  12.0 
+#> 2 8     1            20  12.3 
+#> 3 10    4            20   9.01
+#> 4 11    1           -20  11.8 
+#> 5 18    1           -20  12.2 
+#> 6 20    1             0  12.1
 ```
 
 ## References
