@@ -3,6 +3,16 @@
 
 # rjaf
 
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/wustat/rjaf/tree/main/r-package/rjaf/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/wustat/rjaf/tree/main/r-package/rjaf/actions/workflows/R-CMD-check.yaml)
+[![License: GPL
+v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Project Status: Active – The project has reached a stable, usable
+state and is being actively
+developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+<!-- badges: end -->
+
 > Regularized and Clustered Joint Assignment Forests
 
 Wenbo Wu, Xinyi Zhang, Jann Spiess, Rahul Ladhania
@@ -101,12 +111,12 @@ head(forest.reg)
 #> # A tibble: 6 × 4
 #>   id    trt.rjaf Y.rjaf Y.pred
 #>   <chr> <chr>     <dbl>  <dbl>
-#> 1 5     1           -20  12.0 
-#> 2 8     1            20  12.3 
-#> 3 10    4            20   9.01
-#> 4 11    1           -20  11.8 
-#> 5 18    1           -20  12.2 
-#> 6 20    1             0  12.1
+#> 1 3     1            20  13.6 
+#> 2 5     1           -20  13.6 
+#> 3 6     4            20   8.48
+#> 4 7     4             0   4.79
+#> 5 8     1            20  13.6 
+#> 6 11    1           -20  13.6
 ```
 
 ## References
