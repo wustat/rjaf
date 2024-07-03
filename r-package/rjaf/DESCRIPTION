@@ -11,7 +11,7 @@ Authors@R:
              comment = c(ORCID = "0000-0002-7642-9773")),
       person(given = "Xinyi", 
              family = "Zhang", 
-             email = "Xinyi.Zhang@nyulangone.org",
+             email = "zhang.xinyi@nyu.edu",
              role = c("aut", "cre", "cph")),
       person(given = "Jann",
              family = "Spiess",
