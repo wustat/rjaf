@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 # rjaf
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/wustat/rjaf/tree/main/r-package/rjaf/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/wustat/rjaf/tree/main/r-package/rjaf/actions/workflows/R-CMD-check.yaml)
+[![R build status](https://github.com/wustat/rjaf/blob/main/r-package/rjaf/.github/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/wustat/rjaf/actions)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 <!-- badges: end -->

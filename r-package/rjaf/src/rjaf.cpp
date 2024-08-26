@@ -1,6 +1,8 @@
 #define ARMA_NO_DEBUG
 // #define ARMA_DONT_USE_OPENMP
-#define STRICT_R_HEADERS // needed on Windows, not macOS
+#ifndef STRICT_R_HEADERS // needed on Windows, not macOS
+#define STRICT_R_HEADERS 1
+#endif 
 #include <RcppArmadillo.h>
 #include <RcppArmadilloExtensions/sample.h> // for Rcpp::RcppArmadillo::sample
 // [[Rcpp::depends(RcppArmadillo)]]
