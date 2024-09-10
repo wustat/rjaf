@@ -91,7 +91,7 @@
 #' @examples
 #' 
 #' 
-#'\dontrun{
+#'\donttest{
 #' sim.data <- function(n, K, gamma, sigma, prob=rep(1,K+1)/(K+1)) {
 #'    # K: number of treatment arms
 #'   options(stringsAsFactors=F)
@@ -181,7 +181,7 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
     cluster <- ls.kmeans[[which.max(diff(vec.prop))+1]]$cluster
     df <- data.frame(cluster)
     df[trt] <- as.character(trts)
-    df <- summarise(group_by(data.trainest, trt),
+    df <- summarise(group_by(data.trainest, !!sym(trt)),
                     !!(prob):=mean(!!sym(prob)), .groups="drop") %>%
       inner_join(df, by=trt) %>% group_by(cluster) %>%
       summarise(prob_cluster=sum(!!sym(prob)), .groups="drop") %>%
