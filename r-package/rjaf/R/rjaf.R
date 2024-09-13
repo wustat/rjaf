@@ -31,7 +31,8 @@
 #' @param trt a character string denoting the column name of treatments.
 #' @param vars a vector of character strings denoting the column names of covariates. 
 #' @param prob a character string denoting the column name of probabilities of
-#' treatment assignment.
+#' treatment assignment. If missing, a column named "prob" will be added to `data.trainest` and
+#' `data.validation` indicating simple random treatment assignment.
 #' @param ntrt number of treatments randomly sampled at each split. It should be
 #' at most equal to the number of unique treatments available. The default value is 5.
 #' @param nvar number of covariates randomly sampled at each split. It should be
@@ -153,6 +154,11 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
   trts <- unique(pull(data.trainest, trt))
   if (ntrt>length(trts)) stop("Invalid ntrt!")
   if (nvar>length(vars)) stop("Invalid nvar!")
+  if (missing(prob)) { # default to simple random treatment assignment
+    prob <- "prob"
+    data.trainest <- data.trainest %>% mutate(!!(prob):=1/length(trts))
+    data.validation <- data.validation %>% mutate(!!(prob):=1/length(trts))
+  }
   data.trainest <- mutate(data.trainest, across(c(id, trt), as.character))
   data.validation <- mutate(data.validation, across(c(id, trt), as.character))
   if (resid) data.trainest <- residualize(data.trainest, y, vars, nfold)
