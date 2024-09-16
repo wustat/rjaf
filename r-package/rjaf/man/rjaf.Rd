@@ -49,7 +49,8 @@ column information as in \code{data.trainest}.}
 \item{vars}{a vector of character strings denoting the column names of covariates.}
 
 \item{prob}{a character string denoting the column name of probabilities of
-treatment assignment.}
+treatment assignment. If missing, a column named "prob" will be added to \code{data.trainest} and
+\code{data.validation} indicating simple random treatment assignment.}
 
 \item{ntrt}{number of treatments randomly sampled at each split. It should be
 at most equal to the number of unique treatments available. The default value is 5.}
@@ -119,8 +120,8 @@ IDs, cluster identifiers, and predicted outcomes, and a data frame named as
 \code{clustering} consisting of cluster identifiers, probabilities of being assigned
 to the clusters, and treatment arms. Otherwise, \code{rjaf} simply returns a tibble
 of individual IDs, optimal treatment arms identified by the algorithm, and predicted
-optimal outcomes (ending with \code{.pred}). If counterfactual outcomes are also present, they will be included
-in the tibble along with the column of predicted outcomes (ending with \code{.rjaf}).
+optimal outcomes (ending with \code{.rjaf}). If counterfactual outcomes are also present, they will be included
+in the tibble along with the column of predicted outcomes (ending with \code{.cf}).
 }
 \description{
 This algorithm trains a joint forest model to estimate the optimal treatment assignment
@@ -148,7 +149,7 @@ and obtain the corresponding assignment.
 \examples{
 
 
-\dontrun{
+\donttest{
 sim.data <- function(n, K, gamma, sigma, prob=rep(1,K+1)/(K+1)) {
    # K: number of treatment arms
   options(stringsAsFactors=F)
