@@ -3,7 +3,7 @@
 #' A data set simulated based on the function `sim.data` in the Examples section
 #' of `rjaf.R`.
 #'
-#' @format A data frame with 1000 rows, 12 columns, and 5 treatment arms:
+#' @format A data frame with 100 rows, 12 columns, and 5 treatment arms:
 #' \describe{
 #'   \item{id}{Subject ID.}
 #'   \item{trt}{Character strings indicating treatment arms (0, 1, 2, 3, and 4)
