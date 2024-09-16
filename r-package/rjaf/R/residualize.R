@@ -22,12 +22,16 @@
 #'
 #' @examples 
 #' data(Example_data)
+#' require(magrittr)
+#' require(dplyr)
 #' Example_trainest <- Example_data %>% slice_sample(n = floor(0.5 * nrow(Example_data)))
 #' y <- "Y"
 #' vars <- paste0("X", 1:3)
 #' Example_resid <- residualize(Example_trainest, y, vars, nfold = 5, fun.rf = "ranger")
 #' head(Example_resid)
-#'
+#' @importFrom magrittr %>%
+#' @import dplyr magrittr
+#' 
 #' @references 
 #' Wu, Edward and Johann A Gagnon-Bartsch (2018). The LOOP Estimator: Adjusting
 #' for Covariates in Randomized Experiments. Evaluation Review, 42(4):458–488.

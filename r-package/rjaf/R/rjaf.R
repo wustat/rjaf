@@ -90,13 +90,14 @@
 #' @export
 #'
 #' @examples
-#' 
 #' sim.data <- function(n, K, gamma, sigma, prob=rep(1,K+1)/(K+1)) {
+#'    require(dplyr)
+#'    require(MASS)
 #'    # K: number of treatment arms
-#'   options(stringsAsFactors=F)
+#'   options(stringsAsFactors=FALSE)
 #'   data <- left_join(data.frame(id=1:n,
-#'                                trt=sample(0:K, n, replace=T, prob),
-#'                                MASS::mvrnorm(n, rep(0,3), diag(3))),
+#'                                trt=sample(0:K, n, replace=TRUE, prob),
+#'                                mvrnorm(n, rep(0,3), diag(3))),
 #'                     data.frame(trt=0:K, prob), by="trt")
 #'   data <- mutate(data, tmp1=10+20*(X1>0)-20*(X2>0)-40*(X1>0&X2>0),
 #'                  tmp2=gamma*(2*(X3>0)-1)/(K-1),
@@ -114,8 +115,8 @@
 #' Example_data <- sim.data(n, K, gamma, sigma)
 #' Example_trainest <- Example_data %>% slice_sample(n = floor(0.5 * nrow(Example_data)))
 #' Example_valid <- Example_data %>% filter(!id %in% Example_trainest$id)
-#' id <- "id"; y <- "Y"; trt <- "trt";  
-#' vars <- paste0("X", 1:3); 
+#' id <- "id"; y <- "Y"; trt <- "trt"
+#' vars <- paste0("X", 1:3)
 #' forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, clus.max = 3, 
 #'                    clus.tree.growing = TRUE, setseed = TRUE)
 #' head(forest.reg)
@@ -124,8 +125,9 @@
 #' @useDynLib rjaf, .registration=TRUE
 #' @importFrom Rcpp evalCpp 
 #' @importFrom stats kmeans as.formula predict
-#' @importFrom rlang :=
-#' @import dplyr forcats magrittr readr tibble stringr
+#' @importFrom rlang := 
+#' @importFrom MASS mvrnorm
+#' @import dplyr forcats magrittr readr tibble stringr 
 #'
 #' @references 
 #' Bonhomme, Stéphane and Elena Manresa (2015). Grouped Patterns of Heterogeneity in Panel Data. Econometrica, 83: 1147-1184.

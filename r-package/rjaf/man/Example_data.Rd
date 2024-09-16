@@ -5,7 +5,7 @@
 \alias{Example_data}
 \title{Simulated randomized experiment data}
 \format{
-A data frame with 1000 rows, 12 columns, and 5 treatment arms:
+A data frame with 100 rows, 12 columns, and 5 treatment arms:
 \describe{
 \item{id}{Subject ID.}
 \item{trt}{Character strings indicating treatment arms (0, 1, 2, 3, and 4)

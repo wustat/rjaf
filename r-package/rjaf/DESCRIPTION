@@ -46,7 +46,8 @@ Imports:
     forcats,
     rlang (>= 1.1.0),
     tidyr,
-    stringr
+    stringr,
+    MASS
 Suggests: 
     knitr,
     rmarkdown,
