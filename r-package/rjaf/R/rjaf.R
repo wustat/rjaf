@@ -83,8 +83,9 @@
 #' IDs, cluster identifiers, and predicted outcomes, and a data frame named as
 #' `clustering` consisting of cluster identifiers, probabilities of being assigned
 #' to the clusters, and treatment arms. Otherwise, `rjaf` simply returns a tibble
-#' of individual IDs, optimal treatment arms identified by the algorithm, and predicted
-#' optimal outcomes (ending with `.rjaf`). If counterfactual outcomes are also present, they will be included
+#' of individual IDs, optimal treatment arms identified by the algorithm, treatment
+#' clusters if `clus.tree.growing`=TRUE, and predicted optimal outcomes (ending with
+#' `.rjaf`). If counterfactual outcomes are also present, they will be included
 #' in the tibble along with the column of predicted outcomes (ending with `.cf`).
 
 #' @export
@@ -188,6 +189,7 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
     cluster <- ls.kmeans[[which.max(diff(vec.prop))+1]]$cluster
     df <- data.frame(cluster)
     df[trt] <- as.character(trts)
+    xwalk <- df
     df <- summarise(group_by(data.trainest, !!sym(trt)),
                     !!(prob):=mean(!!sym(prob)), .groups="drop") %>%
       inner_join(df, by=trt) %>% group_by(cluster) %>%
@@ -231,6 +233,10 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
     res <- tibble(!!(id):=as.character(pull(data.validation, id)),
                   !!(trt):=as.character(trts[ls.forest$trt.rjaf]),
                   !!(paste0(y, ".rjaf")):=as.numeric(ls.forest$Y.pred))
+    if (clus.tree.growing) {
+      res <- res %>% left_join(xwalk, by=trt) %>%
+        rename(clus.rjaf=cluster)
+    }
     if (all(paste0(y, trts) %in% names(data.validation))) {
       # all counterfactual outcomes are present
       res <- data.validation %>%
