@@ -87,13 +87,12 @@
 #' clusters if `clus.tree.growing` is `TRUE`, and predicted optimal outcomes (ending
 #' with `.rjaf`). If counterfactual outcomes are also present, they will be included
 #' in the tibble along with the column of predicted outcomes (ending with `.cf`).
-
 #' @export
 #'
 #' @examples
+#' library(dplyr)
+#' library(MASS)
 #' sim.data <- function(n, K, gamma, sigma, prob=rep(1,K+1)/(K+1)) {
-#'    require(dplyr)
-#'    require(MASS)
 #'    # K: number of treatment arms
 #'   options(stringsAsFactors=FALSE)
 #'   data <- left_join(data.frame(id=1:n,
@@ -112,23 +111,21 @@
 #'                 across(c(id, trt), as.character)))
 #' }
 #' 
-#' n <- 100; K <- 4; gamma <- 10; sigma <- 10
+#' n <- 200; K <- 3; gamma <- 10; sigma <- 10
 #' Example_data <- sim.data(n, K, gamma, sigma)
 #' Example_trainest <- Example_data %>% slice_sample(n = floor(0.5 * nrow(Example_data)))
 #' Example_valid <- Example_data %>% filter(!id %in% Example_trainest$id)
 #' id <- "id"; y <- "Y"; trt <- "trt"
 #' vars <- paste0("X", 1:3)
-#' forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, clus.max = 3, 
-#'                    clus.tree.growing = TRUE, setseed = TRUE)
-#' head(forest.reg)
-#'
+#' forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, ntrt = 4,
+#'                    clus.tree.growing = FALSE, setseed = TRUE)
 #'
 #' @useDynLib rjaf, .registration=TRUE
 #' @importFrom Rcpp evalCpp 
 #' @importFrom stats kmeans as.formula predict
 #' @importFrom rlang := 
 #' @importFrom MASS mvrnorm
-#' @import dplyr forcats magrittr readr tibble stringr 
+#' @import dplyr forcats magrittr readr tibble stringr
 #'
 #' @references 
 #' Bonhomme, Stéphane and Elena Manresa (2015). Grouped Patterns of Heterogeneity in Panel Data. Econometrica, 83: 1147-1184.
@@ -158,8 +155,9 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
   if (nvar>length(vars)) stop("Invalid nvar!")
   if (missing(prob)) { # default to simple random treatment assignment
     prob <- "prob"
-    data.trainest <- data.trainest %>% mutate(!!(prob):=1/length(trts))
-    data.validation <- data.validation %>% mutate(!!(prob):=1/length(trts))
+    proportions <- (table(data.trainest$trt) + table(data.validation$trt)) / (nrow(data.trainest) + nrow(data.validation))
+    data.trainest <- data.trainest %>% mutate(!!(prob):= proportions[as.character(trt)])
+    data.validation <- data.validation %>% mutate(!!(prob):= proportions[as.character(trt)])
   }
   data.trainest <- mutate(data.trainest, across(c(id, trt), as.character))
   data.validation <- mutate(data.validation, across(c(id, trt), as.character))
