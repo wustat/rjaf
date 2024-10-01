@@ -44,7 +44,7 @@ residualize <- function(data, y, vars, nfold=5, fun.rf="ranger") {
   if (fun.rf=="randomForest") {
     lapply(1:nfold, function(i) {
       data.i <- data %>% filter(fold==i)
-      data.i[,y] <- data.i[,y] -
+      data.i[, paste0(y, ".resid")] <- data.i[,y] -
         predict(randomForest::randomForest(
           as.formula(paste(y, "~", paste0(vars, collapse="+"))),
           data %>% filter(fold!=i)), data.i)
@@ -54,7 +54,7 @@ residualize <- function(data, y, vars, nfold=5, fun.rf="ranger") {
   } else if (fun.rf=="ranger") {
     lapply(1:nfold, function(i) {
       data.i <- data %>% filter(fold==i)
-      data.i[,y] <- data.i[,y] -
+      data.i[, paste0(y, ".resid")] <- data.i[,y] -
         predict(ranger::ranger(
           as.formula(paste(y, "~", paste0(vars, collapse="+"))),
           data %>% filter(fold!=i)), data.i)[["predictions"]]
