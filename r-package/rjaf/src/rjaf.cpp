@@ -251,8 +251,8 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
                                trt_trainest, prop_train);
   const arma::uvec ids_train = list_ids["ids_train"], ids_est = list_ids["ids_est"];
   const arma::uvec trt = trt_trainest(ids_train);
-  const arma::vec y = y_trainest(ids_train), prob = prob_trainest(ids_train);
-  const arma::vec y_est = y_trainest_resid(ids_est);
+  const arma::vec y = y_trainest_resid(ids_train), prob = prob_trainest(ids_train);
+  const arma::vec y_est = y_trainest(ids_est);
   const arma::mat X = X_trainest.rows(ids_train), X_est = X_trainest.rows(ids_est);
   const arma::uvec cluster_est = cluster_trainest(ids_est);
   // trt, y, prob, X all for training set
