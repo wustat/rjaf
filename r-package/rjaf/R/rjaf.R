@@ -161,7 +161,11 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
   }
   data.trainest <- mutate(data.trainest, across(c(id, trt), as.character))
   data.validation <- mutate(data.validation, across(c(id, trt), as.character))
-  if (resid) data.trainest <- residualize(data.trainest, y, vars, nfold)
+  if (resid) {
+    data.trainest <- residualize(data.trainest, y, vars, nfold)
+  } else { # if resid is FALSE, the two columns of outcomes are identical.
+    data.trainest <- data.trainest %>% mutate(!!(paste0(y, ".resid")):=!!sym(y))
+  }
   if (clus.tree.growing) {
     if (clus.max>length(trts) | clus.max<2) stop("Invalid clus.max!")
     fold <- sample(1:nfold, NROW(data.trainest), TRUE, rep(1, nfold))
@@ -172,7 +176,7 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
         t(do.call(rbind, lapply(1:nfold, function(k) {
           data.onefold <- data.trainest %>% filter(fold==k)
           data.rest <- data.trainest %>% filter(fold!=k)
-          rjaf_cpp(pull(data.rest, y),
+          rjaf_cpp(pull(data.rest, y), pull(data.rest, paste0(y, ".resid")),
                    as.matrix(select(data.rest, all_of(vars))),
                    as.integer(factor(pull(data.rest, trt),
                                      as.character(trts))),
@@ -216,7 +220,7 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                                          as.character(trts)))
   }
   ls.forest <-
-    rjaf_cpp(pull(data.trainest, y),
+    rjaf_cpp(pull(data.trainest, y), pull(data.trainest, paste0(y, ".resid")),
              as.matrix(select(data.trainest, all_of(vars))),
              str.tree.growing, prob.tree.growing, str.outcome.avg,
              as.matrix(select(data.validation, all_of(vars))),
