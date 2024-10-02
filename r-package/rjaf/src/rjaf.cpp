@@ -128,9 +128,9 @@ List splitting(const arma::vec &y, const arma::mat &X, const arma::uvec &trt, co
           ids(0) = id0(k);
           for (unsigned int l = 0; l < id1.n_elem; ++l) {
             ids(1) = id1(l);
-            if (ids(0)!=id0(1)) break;
+            if (ids(0)!=ids(1)) break;
           }
-          if (ids(0)!=id0(1)) break;
+          if (ids(0)!=ids(1)) break;
         }
         trts(j,0) = trt_uniq(ids(0)); trts(j,1) = trt_uniq(ids(1));
         arma::urowvec count_opt = {count(ids(0),0), count(ids(1),1)};
