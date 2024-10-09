@@ -134,7 +134,7 @@ List splitting(const arma::vec &y, const arma::mat &X, const arma::uvec &trt, co
         }
         trts(j,0) = trt_uniq(ids(0)); trts(j,1) = trt_uniq(ids(1));
         arma::urowvec count_opt = {count(ids(0),0), count(ids(1),1)};
-        arma::rowvec prob_opt = probs(ids);
+        arma::rowvec prob_opt = {probs(ids(0)), probs(ids(1))};
         util.row(j) = regavg_opt % count_opt / prob_opt; // ipw adjusted
         arma::urowvec count_split = sum(count); // column sum
         // check conditions 1, 2, and 3 for recursive partitioning
