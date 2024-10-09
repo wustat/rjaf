@@ -244,17 +244,15 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
               const double &epi=0.1, const bool &reg=true,
               const bool &impute=true,
               const bool &setseed=false, const unsigned int &seed=1) {
-  // lambda1 for recursive partitioning, lambda2 for
+  // lambda1 for tree growing on training set; lambda2 for tree growing on estimation and validation sets
   if (setseed) set_seed(seed);
   // analogous to slice_sample in dplyr: sampling within each treatment slice
   List list_ids = slice_sample(arma::regspace<arma::uvec>(0, X_trainest.n_rows-1),
                                trt_trainest, prop_train);
-  const arma::uvec ids_train = list_ids["ids_train"], ids_est = list_ids["ids_est"];
+  const arma::uvec ids_train = list_ids["ids_train"], ids_est = list_ids["ids_est"]; // both with respect to X_trainest
   const arma::uvec trt = trt_trainest(ids_train);
   const arma::vec y = y_trainest_resid(ids_train), prob = prob_trainest(ids_train);
-  const arma::vec y_est = y_trainest(ids_est);
   const arma::mat X = X_trainest.rows(ids_train), X_est = X_trainest.rows(ids_est);
-  const arma::uvec cluster_est = cluster_trainest(ids_est);
   // trt, y, prob, X all for training set
   // utility at root: begin
   arma::uvec trt_uniq = sort(unique(trt));
@@ -388,8 +386,8 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
     mat_res.zeros(X_val.n_rows, clus_uniq.n_elem);
     mat_ct.zeros(X_val.n_rows, clus_uniq.n_elem);
     for (unsigned int i = 0; i < type.size(); ++i) { // go thru each terminal node
-      arma::uvec clus_tmp = cluster_est(filter_est[i]); // subvector of trt column
-      arma::vec y_tmp = y_est(filter_est[i]); // subvector of outcome column
+      arma::uvec clus_tmp = cluster_trainest(filter_est[i]); // subvector of trt column
+      arma::vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
       arma::urowvec count(clus_uniq.n_elem);
       arma::rowvec numer(clus_uniq.n_elem), denom(clus_uniq.n_elem);
       for (unsigned int t = 0; t < clus_uniq.n_elem; ++t) {
@@ -420,8 +418,8 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
     mat_res.zeros(X_val.n_rows, clus_uniq.n_elem);
     mat_ct.zeros(X_val.n_rows, clus_uniq.n_elem);
     for (unsigned int i = 0; i < type.size(); ++i) { // go thru each terminal node
-      arma::uvec clus_tmp = cluster_est(filter_est[i]); // subvector of trt column
-      arma::vec y_tmp = y_est(filter_est[i]); // subvector of outcome column
+      arma::uvec clus_tmp = cluster_trainest(filter_est[i]); // subvector of trt column
+      arma::vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
       arma::urowvec count(clus_uniq.n_elem);
       arma::rowvec avg(clus_uniq.n_elem);
       for (unsigned int t = 0; t < clus_uniq.n_elem; ++t) {
