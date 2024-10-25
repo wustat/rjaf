@@ -3,10 +3,10 @@
 #' A data set simulated based on the function `sim.data` in the Examples section
 #' of `rjaf.R`.
 #'
-#' @format A data frame with 200 rows, 11 columns, and 4 treatment arms:
+#' @format A data frame with 100 rows, 12 columns, and 5 treatment arms:
 #' \describe{
 #'   \item{id}{Subject ID.}
-#'   \item{trt}{Character strings indicating treatment arms (0, 1, 2, and 3)
+#'   \item{trt}{Character strings indicating treatment arms (0, 1, 2, 3, and 4)
 #'   assigned to subjects, where arm 0 is considered to be the control.}
 #'   \item{X1}{Covariate X1.}
 #'   \item{X2}{Covariate X2.}
@@ -17,5 +17,6 @@
 #'   \item{Y1}{Counterfactual outcomes when subjects are assigned to treatment 1.}
 #'   \item{Y2}{Counterfactual outcomes when subjects are assigned to treatment 2.}
 #'   \item{Y3}{Counterfactual outcomes when subjects are assigned to treatment 3.}
+#'   \item{Y4}{Counterfactual outcomes when subjects are assigned to treatment 4.}
 #' }
 "Example_data"

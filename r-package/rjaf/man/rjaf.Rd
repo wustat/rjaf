@@ -119,8 +119,9 @@ returns a list of two objects: a tibble named as \code{res} consisting of indivi
 IDs, cluster identifiers, and predicted outcomes, and a data frame named as
 \code{clustering} consisting of cluster identifiers, probabilities of being assigned
 to the clusters, and treatment arms. Otherwise, \code{rjaf} simply returns a tibble
-of individual IDs, optimal treatment arms identified by the algorithm, and predicted
-optimal outcomes (ending with \code{.rjaf}). If counterfactual outcomes are also present, they will be included
+of individual IDs, optimal treatment arms identified by the algorithm, treatment
+clusters if \code{clus.tree.growing} is \code{TRUE}, and predicted optimal outcomes (ending
+with \code{.rjaf}). If counterfactual outcomes are also present, they will be included
 in the tibble along with the column of predicted outcomes (ending with \code{.cf}).
 }
 \description{
@@ -147,9 +148,9 @@ regularized averages separately by the original treatment arms \eqn{k \in \{0,\l
 and obtain the corresponding assignment.
 }
 \examples{
+library(dplyr)
+library(MASS)
 sim.data <- function(n, K, gamma, sigma, prob=rep(1,K+1)/(K+1)) {
-   require(dplyr)
-   require(MASS)
    # K: number of treatment arms
   options(stringsAsFactors=FALSE)
   data <- left_join(data.frame(id=1:n,
@@ -168,16 +169,14 @@ sim.data <- function(n, K, gamma, sigma, prob=rep(1,K+1)/(K+1)) {
                 across(c(id, trt), as.character)))
 }
 
-n <- 100; K <- 4; gamma <- 10; sigma <- 10
+n <- 200; K <- 3; gamma <- 10; sigma <- 10
 Example_data <- sim.data(n, K, gamma, sigma)
 Example_trainest <- Example_data \%>\% slice_sample(n = floor(0.5 * nrow(Example_data)))
 Example_valid <- Example_data \%>\% filter(!id \%in\% Example_trainest$id)
 id <- "id"; y <- "Y"; trt <- "trt"
 vars <- paste0("X", 1:3)
-forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, clus.max = 3, 
-                   clus.tree.growing = TRUE, setseed = TRUE)
-head(forest.reg)
-
+forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, ntrt = 4, ntree = 100,
+                   clus.tree.growing = FALSE)
 
 }
 \references{
