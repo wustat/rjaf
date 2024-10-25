@@ -117,8 +117,8 @@
 #' Example_valid <- Example_data %>% filter(!id %in% Example_trainest$id)
 #' id <- "id"; y <- "Y"; trt <- "trt"
 #' vars <- paste0("X", 1:3)
-#' forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, ntrt = 4,
-#'                    clus.tree.growing = FALSE, setseed = TRUE)
+#' forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, ntrt = 4, ntree = 100,
+#'                    clus.tree.growing = FALSE)
 #'
 #' @useDynLib rjaf, .registration=TRUE
 #' @importFrom Rcpp evalCpp 
