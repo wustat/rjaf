@@ -2,6 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-.o
-.so
+*.o
+*.so
 .DS_Store
