@@ -241,7 +241,7 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
               const double &lambda2=0.5, const bool &ipw=true,
               const unsigned int &nodesize=5,
               const double &prop_train=0.5,
-              const double &epi=0.1, const bool &reg=true,
+              const double &eps=0.1, const bool &reg=true,
               const bool &impute=true,
               const bool &setseed=false, const unsigned int &seed=1) {
   // lambda1 for tree growing on training set; lambda2 for tree growing on estimation and validation sets
@@ -298,7 +298,7 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
   // push-backs below are for root node only
   vars.push_back(X.n_cols); cutoffs.push_back(0.0);
   // X.n_cols larger than any index; no var to split on
-  double mingain = epi*stddev(y);
+  double mingain = eps*stddev(y);
   do {
     std::set<unsigned int> nodes2split_tmp = nodes2split;
     for (std::set<unsigned int>::iterator i=nodes2split_tmp.begin();
@@ -450,7 +450,7 @@ List rjaf_cpp(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
               const double &lambda1=0.5, const double &lambda2=0.5,
               const bool &ipw=true, const unsigned int &nodesize=5,
               const unsigned int &ntree=1000,
-              const double &prop_train=0.5, const double &epi=0.1,
+              const double &prop_train=0.5, const double &eps=0.1,
               const bool &reg=true, const bool &impute=true,
               const bool &setseed=false, const unsigned int &seed=1) {
   if (setseed) set_seed(seed);
@@ -461,7 +461,7 @@ List rjaf_cpp(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
     List tree_tmp = growTree(y_trainest, y_trainest_resid, X_trainest, trt_trainest,
                              prob_trainest, cluster_trainest,
                              X_val, ntrts, nvars, lambda1,
-                             lambda2, ipw, nodesize, prop_train, epi,
+                             lambda2, ipw, nodesize, prop_train, eps,
                              reg, impute);
     arma::mat outcome_tmp = tree_tmp["res"], ct_tmp = tree_tmp["ct"];
     outcome += outcome_tmp;

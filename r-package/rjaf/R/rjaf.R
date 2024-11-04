@@ -50,7 +50,7 @@
 #' too small a number. The default value is 1000.
 #' @param prop.train proportion of data used for training in `data.trainest`.
 #' The default value is 0.5.
-#' @param epi threshold for minimal welfare gain in terms of the empirical standard
+#' @param eps threshold for minimal welfare gain in terms of the empirical standard
 #' deviation of the overall outcome `y`. The default value is 0.1.
 #' @param resid a logical indicator of arbitrary residualization. If `TRUE`,
 #' residualization is implemented to reduce the variance of the outcome.
@@ -146,7 +146,7 @@
 
 rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
                  ntrt=5, nvar=3, lambda1=0.5, lambda2=0.5, ipw=TRUE,
-                 nodesize=5, ntree=1000, prop.train=0.5, epi=0.1,
+                 nodesize=5, ntree=1000, prop.train=0.5, eps=0.1,
                  resid=TRUE, clus.tree.growing=FALSE, clus.outcome.avg=FALSE,
                  clus.max=10, reg=TRUE, impute=TRUE,
                  setseed=FALSE, seed=1, nfold=5) {
@@ -177,15 +177,15 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
           data.onefold <- data.trainest %>% filter(fold==k)
           data.rest <- data.trainest %>% filter(fold!=k)
           rjaf_cpp(pull(data.rest, y), pull(data.rest, paste0(y, ".resid")),
-                   as.matrix(select(data.rest, all_of(vars))),
+                   as.matrix(dplyr::select(data.rest, all_of(vars))),
                    as.integer(factor(pull(data.rest, trt),
                                      as.character(trts))),
                    pull(data.rest, prob),
                    as.integer(factor(pull(data.rest, trt),
                                      as.character(trts))),
-                   as.matrix(select(data.onefold, all_of(vars))),
+                   as.matrix(dplyr::select(data.onefold, all_of(vars))),
                    ntrt, nvar, lambda1, lambda2, ipw, nodesize, ntree,
-                   prop.train, epi, reg, impute, setseed, seed)$Y.cf
+                   prop.train, eps, reg, impute, setseed, seed)$Y.cf
         }))), i, nstart=5))
     vec.prop <- sapply(ls.kmeans, function(list) list$betweenss/list$totss)
     cluster <- ls.kmeans[[which.max(diff(vec.prop))+1]]$cluster
@@ -221,11 +221,11 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
   }
   ls.forest <-
     rjaf_cpp(pull(data.trainest, y), pull(data.trainest, paste0(y, ".resid")),
-             as.matrix(select(data.trainest, all_of(vars))),
+             as.matrix(dplyr::select(data.trainest, all_of(vars))),
              str.tree.growing, prob.tree.growing, str.outcome.avg,
-             as.matrix(select(data.validation, all_of(vars))),
+             as.matrix(dplyr::select(data.validation, all_of(vars))),
              nstr, nvar, lambda1, lambda2, ipw, nodesize, ntree,
-             prop.train, epi, reg, impute, setseed, seed)
+             prop.train, eps, reg, impute, setseed, seed)
   if (clus.tree.growing & clus.outcome.avg) {
     res <- tibble(!!(id):=as.character(pull(data.validation, id)),
                   cluster=as.character(clus[ls.forest$trt.rjaf]),

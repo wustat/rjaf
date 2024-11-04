@@ -20,7 +20,7 @@ rjaf(
   nodesize = 5,
   ntree = 1000,
   prop.train = 0.5,
-  epi = 0.1,
+  eps = 0.1,
   resid = TRUE,
   clus.tree.growing = FALSE,
   clus.outcome.avg = FALSE,
@@ -77,7 +77,7 @@ too small a number. The default value is 1000.}
 \item{prop.train}{proportion of data used for training in \code{data.trainest}.
 The default value is 0.5.}
 
-\item{epi}{threshold for minimal welfare gain in terms of the empirical standard
+\item{eps}{threshold for minimal welfare gain in terms of the empirical standard
 deviation of the overall outcome \code{y}. The default value is 0.1.}
 
 \item{resid}{a logical indicator of arbitrary residualization. If \code{TRUE},
