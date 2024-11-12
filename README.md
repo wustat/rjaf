@@ -5,8 +5,7 @@
 
 <!-- badges: start -->
 
-[![R build
-status](https://github.com/wustat/rjaf/blob/main/r-package/rjaf/.github/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/wustat/rjaf/actions)
+[![CRAN status](https://www.r-pkg.org/badges/version/rjaf)]
 [![License: GPL
 v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Project Status: Active – The project has reached a stable, usable
