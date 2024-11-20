@@ -33,7 +33,7 @@ Wenbo Wu, Xinyi Zhang, Jann Spiess, Rahul Ladhania
 
 
 ## Installation
-\textbf{rjaf} can be installed from CRAN with:
+**rjaf** can be installed from CRAN with:
 ```
 install.packages("rjaf")
 ```

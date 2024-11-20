@@ -4,7 +4,9 @@
 # rjaf
 
 <!-- badges: start -->
-[![CRAN status](https://www.r-pkg.org/badges/version/rjaf)](https://CRAN.R-project.org/package=rjaf) ![](http://cranlogs.r-pkg.org/badges/grand-total/rjaf)
+
+[![R build
+status](https://github.com/wustat/rjaf/blob/main/r-package/rjaf/.github/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/wustat/rjaf/actions)
 [![License: GPL
 v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Project Status: Active – The project has reached a stable, usable
@@ -31,7 +33,7 @@ we introduce the use of **rjaf** through an example dataset.
 
 ## Installation
 
-can be installed from CRAN with:
+**rjaf** can be installed from CRAN with:
 
     install.packages("rjaf")
 
@@ -115,12 +117,12 @@ head(forest.reg)
 #> # A tibble: 6 × 5
 #>   id    trt.rjaf  Y.cf Y.rjaf clus.rjaf
 #>   <chr> <chr>    <dbl>  <dbl>     <int>
-#> 1 1     4          -20   7.20         1
-#> 2 2     4           40  31.4          1
-#> 3 7     4          -40  10.1          1
-#> 4 13    4          -20   7.78         1
-#> 5 16    4            0  10.1          1
-#> 6 17    4          -20   7.24         1
+#> 1 2     1         20    7.24          3
+#> 2 5     1          0   10.0           3
+#> 3 6     2         26.7 -0.199         3
+#> 4 11    1        -40    8.02          3
+#> 5 12    1         40   18.5           3
+#> 6 13    1          0   11.0           3
 ```
 
 ## References
