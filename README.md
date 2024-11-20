@@ -33,11 +33,15 @@ we introduce the use of **rjaf** through an example dataset.
 
 ## Installation
 
-``` r
-require("devtools")
-require("remotes")
-devtools::install_github("wustat/rjaf", subdir = "r-package/rjaf")
-```
+can be installed from CRAN with:
+
+    install.packages("rjaf")
+
+The stable, development version can be installed from GitHub with:
+
+    require("devtools")
+    require("remotes")
+    devtools::install_github("wustat/rjaf", subdir = "r-package/rjaf")
 
 ## What is regularized and clustered joint assignment forest (rjaf)?
 
@@ -71,10 +75,11 @@ obtains the corresponding assignment.
 
 ``` r
 library(rjaf)
+#> Warning: package 'rjaf' was built under R version 4.3.3
 ```
 
 We use a dataset simulated by `sim.data()` under the example section of
-`rjaf.R`. This dataset contains a total of 1000 items and 5 treatment
+`rjaf.R`. This dataset contains a total of 100 items and 5 treatment
 arms, with a total of 12 covariates as documented in `data.R`. After
 preparing the `Example_data` into training, estimation, and validation,
 we can obtain regularized averages by 5 treatment arms and acquire the
@@ -109,15 +114,15 @@ forest.reg <- rjaf(data.trainest, data.validation, y, id, trt, vars,
                    clus.tree.growing = TRUE, setseed = TRUE)
 
 head(forest.reg)
-#> # A tibble: 6 × 4
-#>   id    trt.rjaf Y.rjaf Y.pred
-#>   <chr> <chr>     <dbl>  <dbl>
-#> 1 1     4             0   9.40
-#> 2 2     1             0  10.5 
-#> 3 3     1            20  10.6 
-#> 4 5     1           -20  10.6 
-#> 5 7     4             0   2.46
-#> 6 8     1            20  10.6
+#> # A tibble: 6 × 5
+#>   id    trt.rjaf  Y.cf Y.rjaf clus.rjaf
+#>   <chr> <chr>    <dbl>  <dbl>     <int>
+#> 1 1     4          -20   7.20         1
+#> 2 2     4           40  31.4          1
+#> 3 7     4          -40  10.1          1
+#> 4 13    4          -20   7.78         1
+#> 5 16    4            0  10.1          1
+#> 6 17    4          -20   7.24         1
 ```
 
 ## References

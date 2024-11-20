@@ -33,13 +33,17 @@ Wenbo Wu, Xinyi Zhang, Jann Spiess, Rahul Ladhania
 
 
 ## Installation
+\textbf{rjaf} can be installed from CRAN with:
+```
+install.packages("rjaf")
+```
 
-```{r, message = FALSE}
+The stable, development version can be installed from GitHub with:
+```
 require("devtools")
 require("remotes")
 devtools::install_github("wustat/rjaf", subdir = "r-package/rjaf")
 ```
-
 
 ## What is regularized and clustered joint assignment forest (rjaf)? 
 The algorithm aims to train a joint forest model to estimate the optimal treatment assignment by pooling information across treatment arms.
@@ -58,7 +62,7 @@ library(rjaf)
 ```
 
 
-We use a dataset simulated by `sim.data()` under the example section of `rjaf.R`. This dataset contains a total of 1000 items and 5 treatment arms, with a total of 12 covariates as documented in `data.R`. After preparing the `Example_data` into training, estimation, and validation, we can obtain regularized averages by 5 treatment arms and acquire the optimal assignment. 
+We use a dataset simulated by `sim.data()` under the example section of `rjaf.R`. This dataset contains a total of 100 items and 5 treatment arms, with a total of 12 covariates as documented in `data.R`. After preparing the `Example_data` into training, estimation, and validation, we can obtain regularized averages by 5 treatment arms and acquire the optimal assignment. 
 
 Our algorithm returns a tibble named ``forest.reg``, with individual IDs, optimal treatment arms identified (`trt.rjaf`), and predicted optimal outcomes (`Y.pred`). As counterfactual outcomes present, they are also included in the tibble (`Y.rjaf`).
 
