@@ -58,6 +58,80 @@ As in the implementations of other forest-based methods, built-in hyper-paramete
 
 ![A description of the `rjaf_cpp` function. \label{fig:rjaf_cpp}](rjaf_cpp.pdf){width=100%}
 
+# Quick Start
+
+This section serves as an introduction for basics of `rjaf`. The `rjaf` can be installed by following R commands:
+```r
+library(rjaf)
+```
+
+We provide a synthetic data example with size $n$ to demonstrate the usage of `rjaf` function. Note that $\gamma$ is the treatment effect strengths and $\sigma$ is the noise level. $K + 1$ is the number of treatment arms and $prob$ corresponds to the probabilities of treatment sampling. 
+
+```r
+library(MASS)
+library(dplyr)
+sim.data <- function(n, K, gamma, sigma, probability = rep(1,K+1)/(K+1)) {
+  options(stringsAsFactors=FALSE)
+  data <- left_join(data.frame(id=1:n,
+                               trt=sample(0:K, n, replace=TRUE, probability),
+                               mvrnorm(n, rep(0,3), diag(3))),
+                    data.frame(trt=0:K, prob=probability), by="trt")
+  data <- mutate(data, tmp1=10+20*(X1>0)-20*(X2>0)-40*(X1>0&X2>0),
+                 tmp2=gamma*(2*(X3>0)-1)/(K-1),
+                 tmp3=-10*X1^2,
+                 Y=tmp1+tmp2*(trt>0)*(2*trt-K-1)+tmp3*(trt==0)+rnorm(n,0,sigma))
+  
+  Y.cf <- data.frame(sapply(0:K, function(t) # counterfactual outcomes
+    mutate(data, Y=tmp1+tmp2*(t>0)*(2*t-K-1)+tmp3*(t==0))$Y))
+  names(Y.cf) <- paste0("Y",0:K)
+  return(mutate(bind_cols(dplyr::select(data, -c(tmp1,tmp2,tmp3)), Y.cf),
+                across(c(id, trt), as.character)))
+}
+```
+
+Referencing to the `rjaf` documentation, we set "id" as the column name of individual IDs, "Y" as the column name of outcomes, "X1, X2, X3" as the column names of covariates, "trt" as the column name of treatments, and "prob" as the column name of probabilities of treatment assignment.
+
+```r
+id <- "id"; y <- "Y"; vars <- paste0("X", 1:3); trt <- "trt"; prob <- "prob"
+```
+
+We define our number of treatment arms as 30 (K  = 29), treatment effect strengths (gamma = 10), noise level (sigma = 20).
+```r
+K <- 29; ntrt <- K+1; gamma <- 10; sigma <- 20; probability <- rep(1, K+1)/ntrt;
+lambda1 <- 0; lambda2 <- 0; reg <- T; impute <- F; eps <- 0.5;
+nvar <- 3; nodesize <- 3; clus.tree.growing <- T
+```
+
+We simulate 1000 observations for training and estimation, and 1000 observations for validation. 
+```r
+n.validation <- 1000; n.trainest <- 1000
+data.trainest <- sim.data(n.trainest, K, gamma, sigma, probability)
+data.validation <- sim.data(n.validation, K, gamma, sigma, probability)
+```
+
+
+```r
+result <- rjaf(data.trainest, data.validation, y = y, id = id, trt = trt, 
+     vars = vars, prob = prob, ntrt = ntrt, nvar = nvar,
+     lambda1 = lambda1, lambda2 = lambda2, nodesize = nodesize, eps = eps, 
+     reg = reg, impute = impute,
+     clus.tree.growing = clus.tree.growing,
+     clus.max = 5)
+head(result)
+
+# A tibble: 6 × 5
+  id    trt.rjaf  Y.cf Y.rjaf clus.rjaf
+  <chr> <chr>    <dbl>  <dbl>     <int>
+1 1     11       12.9    18.4         3
+2 2     11       12.9    18.5         3
+3 3     27       18.6    19.9         1
+4 4     27       38.6    23.4         1
+5 5     26       -2.14   14.4         1
+6 6     3        38.6    32.9         2
+```
+
+
+
 # Availability
 
 The `rjaf` package is publicly available on [GitHub](https://github.com/wustat/rjaf), where the use of the `rjaf` package, including installation instructions and an example, has been documented in the `README.md` file. The package is also available on the [Comprehensive R Archive Network](https://CRAN.R-project.org/package=rjaf).
