@@ -5,9 +5,9 @@
 
 <!-- badges: start -->
 
-[![R build
-status](https://github.com/wustat/rjaf/blob/main/r-package/rjaf/.github/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/wustat/rjaf/actions)
-[![License: GPL
+[![CRAN
+status](https://www.r-pkg.org/badges/version/rjaf)](https://CRAN.R-project.org/package=rjaf)
+![](http://cranlogs.r-pkg.org/badges/grand-total/rjaf) [![License: GPL
 v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Project Status: Active – The project has reached a stable, usable
 state and is being actively
@@ -117,12 +117,12 @@ head(forest.reg)
 #> # A tibble: 6 × 5
 #>   id    trt.rjaf  Y.cf Y.rjaf clus.rjaf
 #>   <chr> <chr>    <dbl>  <dbl>     <int>
-#> 1 2     1         20    7.24          3
-#> 2 5     1          0   10.0           3
-#> 3 6     2         26.7 -0.199         3
-#> 4 11    1        -40    8.02          3
-#> 5 12    1         40   18.5           3
-#> 6 13    1          0   11.0           3
+#> 1 1     1            0  12.9          1
+#> 2 4     1           20  19.8          1
+#> 3 7     4          -40   9.81         1
+#> 4 8     1            0  18.0          1
+#> 5 9     4          -20  16.0          1
+#> 6 10    4          -20  10.3          1
 ```
 
 ## References
