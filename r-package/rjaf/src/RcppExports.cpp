@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // rjaf_cpp
-List rjaf_cpp(const arma::vec& y_trainest, const arma::vec& y_trainest_resid, const arma::mat& X_trainest, const arma::uvec& trt_trainest, const arma::vec& prob_trainest, const arma::uvec& cluster_trainest, const arma::mat& X_val, const unsigned int& ntrts, const unsigned int& nvars, const double& lambda1, const double& lambda2, const bool& ipw, const unsigned int& nodesize, const unsigned int& ntree, const double& prop_train, const double& eps, const bool& reg, const bool& impute, const bool& setseed, const unsigned int& seed);
-RcppExport SEXP _rjaf_rjaf_cpp(SEXP y_trainestSEXP, SEXP y_trainest_residSEXP, SEXP X_trainestSEXP, SEXP trt_trainestSEXP, SEXP prob_trainestSEXP, SEXP cluster_trainestSEXP, SEXP X_valSEXP, SEXP ntrtsSEXP, SEXP nvarsSEXP, SEXP lambda1SEXP, SEXP lambda2SEXP, SEXP ipwSEXP, SEXP nodesizeSEXP, SEXP ntreeSEXP, SEXP prop_trainSEXP, SEXP epsSEXP, SEXP regSEXP, SEXP imputeSEXP, SEXP setseedSEXP, SEXP seedSEXP) {
+List rjaf_cpp(const arma::vec& y_trainest, const arma::vec& y_trainest_resid, const arma::mat& X_trainest, const arma::uvec& trt_trainest, const arma::vec& prob_trainest, const arma::uvec& cluster_trainest, const arma::mat& X_heldout, const unsigned int& ntrts, const unsigned int& nvars, const double& lambda1, const double& lambda2, const bool& ipw, const unsigned int& nodesize, const unsigned int& ntree, const double& prop_train, const double& eps, const bool& reg, const bool& impute, const bool& setseed, const unsigned int& seed);
+RcppExport SEXP _rjaf_rjaf_cpp(SEXP y_trainestSEXP, SEXP y_trainest_residSEXP, SEXP X_trainestSEXP, SEXP trt_trainestSEXP, SEXP prob_trainestSEXP, SEXP cluster_trainestSEXP, SEXP X_heldoutSEXP, SEXP ntrtsSEXP, SEXP nvarsSEXP, SEXP lambda1SEXP, SEXP lambda2SEXP, SEXP ipwSEXP, SEXP nodesizeSEXP, SEXP ntreeSEXP, SEXP prop_trainSEXP, SEXP epsSEXP, SEXP regSEXP, SEXP imputeSEXP, SEXP setseedSEXP, SEXP seedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -23,7 +23,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::uvec& >::type trt_trainest(trt_trainestSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type prob_trainest(prob_trainestSEXP);
     Rcpp::traits::input_parameter< const arma::uvec& >::type cluster_trainest(cluster_trainestSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type X_val(X_valSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type X_heldout(X_heldoutSEXP);
     Rcpp::traits::input_parameter< const unsigned int& >::type ntrts(ntrtsSEXP);
     Rcpp::traits::input_parameter< const unsigned int& >::type nvars(nvarsSEXP);
     Rcpp::traits::input_parameter< const double& >::type lambda1(lambda1SEXP);
@@ -37,7 +37,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const bool& >::type impute(imputeSEXP);
     Rcpp::traits::input_parameter< const bool& >::type setseed(setseedSEXP);
     Rcpp::traits::input_parameter< const unsigned int& >::type seed(seedSEXP);
-    rcpp_result_gen = Rcpp::wrap(rjaf_cpp(y_trainest, y_trainest_resid, X_trainest, trt_trainest, prob_trainest, cluster_trainest, X_val, ntrts, nvars, lambda1, lambda2, ipw, nodesize, ntree, prop_train, eps, reg, impute, setseed, seed));
+    rcpp_result_gen = Rcpp::wrap(rjaf_cpp(y_trainest, y_trainest_resid, X_trainest, trt_trainest, prob_trainest, cluster_trainest, X_heldout, ntrts, nvars, lambda1, lambda2, ipw, nodesize, ntree, prop_train, eps, reg, impute, setseed, seed));
     return rcpp_result_gen;
 END_RCPP
 }

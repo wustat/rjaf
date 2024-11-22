@@ -24,7 +24,7 @@
 #' @param data.trainest input data used for training and estimation, where each
 #' row corresponds to an individual and columns contain information on treatments,
 #' covariates, probabilities of treatment assignment, and observed outcomes.
-#' @param data.validation input data used for validation with the same row and
+#' @param data.heldout input data used for validation with the same row and
 #' column information as in `data.trainest`.
 #' @param y a character string denoting the column name of outcomes.
 #' @param id a character string denoting the column name of individual IDs.
@@ -32,7 +32,7 @@
 #' @param vars a vector of character strings denoting the column names of covariates. 
 #' @param prob a character string denoting the column name of probabilities of
 #' treatment assignment. If missing, a column named "prob" will be added to `data.trainest` and
-#' `data.validation` indicating simple random treatment assignment.
+#' `data.heldout` indicating simple random treatment assignment.
 #' @param ntrt number of treatments randomly sampled at each split. It should be
 #' at most equal to the number of unique treatments available. The default value is 5.
 #' @param nvar number of covariates randomly sampled at each split. It should be
@@ -114,10 +114,10 @@
 #' n <- 200; K <- 3; gamma <- 10; sigma <- 10
 #' Example_data <- sim.data(n, K, gamma, sigma)
 #' Example_trainest <- Example_data %>% slice_sample(n = floor(0.5 * nrow(Example_data)))
-#' Example_valid <- Example_data %>% filter(!id %in% Example_trainest$id)
+#' Example_heldout <- Example_data %>% filter(!id %in% Example_trainest$id)
 #' id <- "id"; y <- "Y"; trt <- "trt"
 #' vars <- paste0("X", 1:3)
-#' forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, ntrt = 4, ntree = 100,
+#' forest.reg <- rjaf(Example_trainest, Example_heldout, y, id, trt, vars, ntrt = 4, ntree = 100,
 #'                    clus.tree.growing = FALSE)
 #'
 #' @useDynLib rjaf, .registration=TRUE
@@ -144,7 +144,7 @@
 #' \cr
 #' 
 
-rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
+rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
                  ntrt=5, nvar=3, lambda1=0.5, lambda2=0.5, ipw=TRUE,
                  nodesize=5, ntree=1000, prop.train=0.5, eps=0.1,
                  resid=TRUE, clus.tree.growing=FALSE, clus.outcome.avg=FALSE,
@@ -155,12 +155,12 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
   if (nvar>length(vars)) stop("Invalid nvar!")
   if (missing(prob)) { # default to simple random treatment assignment
     prob <- "prob"
-    proportions <- (table(data.trainest$trt) + table(data.validation$trt)) / (nrow(data.trainest) + nrow(data.validation))
+    proportions <- (table(data.trainest$trt) + table(data.heldout$trt)) / (nrow(data.trainest) + nrow(data.heldout))
     data.trainest <- data.trainest %>% mutate(!!(prob):= proportions[as.character(trt)])
-    data.validation <- data.validation %>% mutate(!!(prob):= proportions[as.character(trt)])
+    data.heldout <- data.heldout %>% mutate(!!(prob):= proportions[as.character(trt)])
   }
   data.trainest <- mutate(data.trainest, across(c(id, trt), as.character))
-  data.validation <- mutate(data.validation, across(c(id, trt), as.character))
+  data.heldout <- mutate(data.heldout, across(c(id, trt), as.character))
   if (resid) {
     data.trainest <- residualize(data.trainest, y, vars, nfold)
   } else { # if resid is FALSE, the two columns of outcomes are identical.
@@ -223,25 +223,25 @@ rjaf <- function(data.trainest, data.validation, y, id, trt, vars, prob,
     rjaf_cpp(pull(data.trainest, y), pull(data.trainest, paste0(y, ".resid")),
              as.matrix(dplyr::select(data.trainest, all_of(vars))),
              str.tree.growing, prob.tree.growing, str.outcome.avg,
-             as.matrix(dplyr::select(data.validation, all_of(vars))),
+             as.matrix(dplyr::select(data.heldout, all_of(vars))),
              nstr, nvar, lambda1, lambda2, ipw, nodesize, ntree,
              prop.train, eps, reg, impute, setseed, seed)
   if (clus.tree.growing & clus.outcome.avg) {
-    res <- tibble(!!(id):=as.character(pull(data.validation, id)),
+    res <- tibble(!!(id):=as.character(pull(data.heldout, id)),
                   cluster=as.character(clus[ls.forest$trt.rjaf]),
                   !!(paste0(y, ".rjaf")):=as.numeric(ls.forest$Y.pred))
     return(list(res=res, clustering=df))
   } else {
-    res <- tibble(!!(id):=as.character(pull(data.validation, id)),
+    res <- tibble(!!(id):=as.character(pull(data.heldout, id)),
                   !!(trt):=as.character(trts[ls.forest$trt.rjaf]),
                   !!(paste0(y, ".rjaf")):=as.numeric(ls.forest$Y.pred))
     if (clus.tree.growing) {
       res <- res %>% left_join(xwalk, by=trt) %>%
         rename(clus.rjaf=cluster)
     }
-    if (all(paste0(y, trts) %in% names(data.validation))) {
+    if (all(paste0(y, trts) %in% names(data.heldout))) {
       # all counterfactual outcomes are present
-      res <- data.validation %>%
+      res <- data.heldout %>%
         dplyr::select(all_of(c(id, paste0(y, trts)))) %>%
         tidyr::pivot_longer(cols=paste0(y, trts), names_to=trt, names_prefix=y,
                      values_to=y) %>%

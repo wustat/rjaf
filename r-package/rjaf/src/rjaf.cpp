@@ -236,7 +236,7 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
               const arma::mat &X_trainest,
               const arma::uvec &trt_trainest, const arma::vec &prob_trainest,
               const arma::uvec &cluster_trainest,
-              const arma::mat &X_val, const unsigned int &ntrts=5,
+              const arma::mat &X_heldout, const unsigned int &ntrts=5,
               const unsigned int &nvars=3, const double &lambda1=0.5,
               const double &lambda2=0.5, const bool &ipw=true,
               const unsigned int &nodesize=5,
@@ -244,7 +244,7 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
               const double &eps=0.1, const bool &reg=true,
               const bool &impute=true,
               const bool &setseed=false, const unsigned int &seed=1) {
-  // lambda1 for tree growing on training set; lambda2 for tree growing on estimation and validation sets
+  // lambda1 for tree growing on training set; lambda2 for tree growing on estimation and heldout sets
   if (setseed) set_seed(seed);
   // analogous to slice_sample in dplyr: sampling within each treatment slice
   List list_ids = slice_sample(arma::regspace<arma::uvec>(0, X_trainest.n_rows-1),
@@ -288,8 +288,8 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
   filter.push_back(arma::regspace<arma::uvec>(0, X.n_rows-1)); // all rows of training data
   std::vector<arma::uvec> filter_est;
   filter_est.push_back(arma::regspace<arma::uvec>(0, X_est.n_rows-1)); // all rows of est data
-  std::vector<arma::uvec> filter_val;
-  filter_val.push_back(arma::regspace<arma::uvec>(0, X_val.n_rows-1)); // all rows of val data
+  std::vector<arma::uvec> filter_heldout;
+  filter_heldout.push_back(arma::regspace<arma::uvec>(0, X_heldout.n_rows-1)); // all rows of heldout data
   CharacterVector type = {"split"}; // start from root node as split
   // "leaf" indicates terminal node with no further splitting
   // "parent" indicates splits created already 
@@ -306,7 +306,7 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
       unsigned int node2split = *i; // node to split on
       arma::uvec ids = filter[node2split-1]; // zero-index in C++
       arma::uvec ids_est = filter_est[node2split-1];
-      arma::uvec ids_val = filter_val[node2split-1];
+      arma::uvec ids_heldout = filter_heldout[node2split-1];
       arma::uvec trt_tmp = trt(ids); // trt column of the subsample
       arma::uvec trt_sub;
       trt_sub = Rcpp::RcppArmadillo::sample(trt_uniq, ntrts, false);
@@ -338,16 +338,16 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
             arma::uvec var_tmp(1); var_tmp.fill(var);
             arma::uvec ids_est_left = ids_est(find(X_est(ids_est,var_tmp).as_col()<cutoff));
             arma::uvec ids_est_right = ids_est(find(X_est(ids_est,var_tmp).as_col()>=cutoff));
-            arma::uvec ids_val_left = ids_val(find(X_val(ids_val,var_tmp).as_col()<cutoff));
-            arma::uvec ids_val_right = ids_val(find(X_val(ids_val,var_tmp).as_col()>=cutoff));
+            arma::uvec ids_heldout_left = ids_heldout(find(X_heldout(ids_heldout,var_tmp).as_col()<cutoff));
+            arma::uvec ids_heldout_right = ids_heldout(find(X_heldout(ids_heldout,var_tmp).as_col()>=cutoff));
             if (ids_est_left.n_elem==0 || ids_est_right.n_elem==0 ||
-                ids_val_left.n_elem==0 || ids_val_right.n_elem==0) {
-              // split leads to empty branch for est or val data
+                ids_heldout_left.n_elem==0 || ids_heldout_right.n_elem==0) {
+              // split leads to empty branch for est or heldout data
               type[node2split-1] = "leaf";
               nodes2split.erase(node2split); // drop split leading to empty branch
             } else {
               filter_est.push_back(ids_est_left); filter_est.push_back(ids_est_right);
-              filter_val.push_back(ids_val_left); filter_val.push_back(ids_val_right);
+              filter_heldout.push_back(ids_heldout_left); filter_heldout.push_back(ids_heldout_right);
               filter.push_back(ids(find(X(ids,var_tmp).as_col()<cutoff)));
               filter.push_back(ids(find(X(ids,var_tmp).as_col()>=cutoff)));
               parentnode.push_back(node2split); parentnode.push_back(node2split);
@@ -376,15 +376,15 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
     } else { // nonterminal nodes
       type.erase(i);
       filter_est.erase(filter_est.begin()+i);
-      filter_val.erase(filter_val.begin()+i);
+      filter_heldout.erase(filter_heldout.begin()+i);
       --i;
     }
   }
   arma::mat mat_res, mat_ct;
   if (reg) {
     arma::uvec clus_uniq = sort(unique(cluster_trainest));
-    mat_res.zeros(X_val.n_rows, clus_uniq.n_elem);
-    mat_ct.zeros(X_val.n_rows, clus_uniq.n_elem);
+    mat_res.zeros(X_heldout.n_rows, clus_uniq.n_elem);
+    mat_ct.zeros(X_heldout.n_rows, clus_uniq.n_elem);
     for (unsigned int i = 0; i < type.size(); ++i) { // go thru each terminal node
       arma::uvec clus_tmp = cluster_trainest(filter_est[i]); // subvector of trt column
       arma::vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
@@ -409,14 +409,14 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
       }
       arma::rowvec regwt(regavg.n_elem, arma::fill::zeros);
       regwt(find(count)) += 1.0;
-      // assign regavg to units of val data belonging to the terminal node
-      mat_res.rows(filter_val[i]) += repmat(regavg, filter_val[i].n_elem, 1);
-      mat_ct.rows(filter_val[i]) += repmat(regwt, filter_val[i].n_elem, 1);
+      // assign regavg to units of heldout data belonging to the terminal node
+      mat_res.rows(filter_heldout[i]) += repmat(regavg, filter_heldout[i].n_elem, 1);
+      mat_ct.rows(filter_heldout[i]) += repmat(regwt, filter_heldout[i].n_elem, 1);
     }
   } else {
     arma::uvec clus_uniq = sort(unique(cluster_trainest));
-    mat_res.zeros(X_val.n_rows, clus_uniq.n_elem);
-    mat_ct.zeros(X_val.n_rows, clus_uniq.n_elem);
+    mat_res.zeros(X_heldout.n_rows, clus_uniq.n_elem);
+    mat_ct.zeros(X_heldout.n_rows, clus_uniq.n_elem);
     for (unsigned int i = 0; i < type.size(); ++i) { // go thru each terminal node
       arma::uvec clus_tmp = cluster_trainest(filter_est[i]); // subvector of trt column
       arma::vec y_tmp = y_trainest(filter_est[i]); // subvector of outcome column
@@ -433,9 +433,9 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
       }
       arma::rowvec wt(clus_uniq.n_elem, arma::fill::zeros);
       wt(find(count)) += 1.0;
-      // assign avg to units of val data belonging to the terminal node
-      mat_res.rows(filter_val[i]) += repmat(avg, filter_val[i].n_elem, 1);
-      mat_ct.rows(filter_val[i]) += repmat(wt, filter_val[i].n_elem, 1);
+      // assign avg to units of heldout data belonging to the terminal node
+      mat_res.rows(filter_heldout[i]) += repmat(avg, filter_heldout[i].n_elem, 1);
+      mat_ct.rows(filter_heldout[i]) += repmat(wt, filter_heldout[i].n_elem, 1);
     }
   }
   return List::create(_["res"]=mat_res, _["ct"]=mat_ct);
@@ -445,7 +445,7 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
 List rjaf_cpp(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
               const arma::mat &X_trainest,
               const arma::uvec &trt_trainest, const arma::vec &prob_trainest,
-              const arma::uvec &cluster_trainest, const arma::mat &X_val,
+              const arma::uvec &cluster_trainest, const arma::mat &X_heldout,
               const unsigned int &ntrts=5, const unsigned int &nvars=3,
               const double &lambda1=0.5, const double &lambda2=0.5,
               const bool &ipw=true, const unsigned int &nodesize=5,
@@ -456,11 +456,11 @@ List rjaf_cpp(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
   if (setseed) set_seed(seed);
   arma::uvec clus_uniq = sort(unique(cluster_trainest));
   unsigned int nclus = clus_uniq.n_elem;
-  arma::mat outcome(X_val.n_rows, nclus, arma::fill::zeros), ct(X_val.n_rows, nclus, arma::fill::zeros);
+  arma::mat outcome(X_heldout.n_rows, nclus, arma::fill::zeros), ct(X_heldout.n_rows, nclus, arma::fill::zeros);
   for (unsigned int i = 0; i < ntree; ++i) {
     List tree_tmp = growTree(y_trainest, y_trainest_resid, X_trainest, trt_trainest,
                              prob_trainest, cluster_trainest,
-                             X_val, ntrts, nvars, lambda1,
+                             X_heldout, ntrts, nvars, lambda1,
                              lambda2, ipw, nodesize, prop_train, eps,
                              reg, impute);
     arma::mat outcome_tmp = tree_tmp["res"], ct_tmp = tree_tmp["ct"];
@@ -469,7 +469,7 @@ List rjaf_cpp(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
   }
   ct.replace(0.0, 1.0);
   outcome /= ct;
-  // identify optimal clus idx for each unit in val data
+  // identify optimal clus idx for each unit in heldout data
   arma::uvec idx_clus = index_max(outcome, 1);
   arma::uvec clus_pred(idx_clus.n_elem, arma::fill::zeros);
   for (unsigned int t = 0; t < nclus; ++t) {
