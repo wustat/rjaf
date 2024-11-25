@@ -14,7 +14,7 @@ state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 <!-- badges: end -->
 
-> Regularized and Clustered Joint Assignment Forests
+> Regularized Joint Assignment Forests with Treatment Arm Clustering
 
 Wenbo Wu, Xinyi Zhang, Jann Spiess, Rahul Ladhania
 
@@ -22,22 +22,22 @@ Wenbo Wu, Xinyi Zhang, Jann Spiess, Rahul Ladhania
 
 ## Introduction
 
-**rjaf** is an R package that implements a regularized and clustered
+`rjaf` is an `R` package that implements a regularized and clustered
 joint assignment forest which targets joint assignment to one of many
 treatment arms as described in Ladhania, Spiess, Ungar, and Wu (2023).
 It utilizes a regularized forest-based greedy recursive algorithm to
 shrink effect estimates across arms and a clustering approach to combine
 treatment arm with similar outcomes. The optimal treatment assignment is
 estimated by pooling information across treatment arms. In this tutorial
-we introduce the use of **rjaf** through an example dataset.
+we introduce the use of `rjaf` through an example data set.
 
 ## Installation
 
-**rjaf** can be installed from CRAN with:
+`rjaf` can be installed from CRAN with
 
     install.packages("rjaf")
 
-The stable, development version can be installed from GitHub with:
+The stable, development version can be installed from GitHub with
 
     require("devtools")
     require("remotes")
@@ -65,8 +65,8 @@ original arms are combined by groups) to obtain an ensemble of trees.
 The following scripts demonstrate the function `rjaf()`, which
 constructs a joint forest model to estimate the optimal treatment
 assignment by pooling information across treatment arms using a
-clustering scheme. By inputting training, estimation, and validation
-data, we can obtain final regularized predictions and assignments in
+clustering scheme. By inputting training, estimation, and heldout data,
+we can obtain final regularized predictions and assignments in
 `forest.reg`, where the algorithm estimates regularized averages
 separately by the original treatment arms $k \in \{0,\ldots,K\}$ and
 obtains the corresponding assignment.
@@ -78,30 +78,31 @@ library(rjaf)
 #> Warning: package 'rjaf' was built under R version 4.3.3
 ```
 
-We use a dataset simulated by `sim.data()` under the example section of
+We use a data set simulated by `sim.data()` under the example section of
 `rjaf.R`. This dataset contains a total of 100 items and 5 treatment
 arms, with a total of 12 covariates as documented in `data.R`. After
-preparing the `Example_data` into training, estimation, and validation,
-we can obtain regularized averages by 5 treatment arms and acquire the
+preparing the `Example_data` into training, estimation, and heldout, we
+can obtain regularized averages by 5 treatment arms and acquire the
 optimal assignment.
 
 Our algorithm returns a tibble named `forest.reg`, with individual IDs,
-optimal treatment arms identified (`trt.rjaf`), and predicted optimal
-outcomes (`Y.pred`). As counterfactual outcomes present, they are also
-included in the tibble (`Y.rjaf`).
+optimal treatment arms identified (`trt.rjaf`), predicted optimal
+outcomes (`Y.rjaf`), and treatment arm clusters (`clus.rjaf`). As
+counterfactual outcomes present, they are also included in the tibble
+(`Y.cf`).
 
 ``` r
 library(magrittr)
 library(dplyr)
 
-# prepare training, estimation, and validation data
+# prepare training, estimation, and heldout data
 data("Example_data")
 
 # training and estimation
 data.trainest <- Example_data %>% 
                   slice_sample (n = floor(0.5 * nrow(Example_data)))
-# validation
-data.validation <- Example_data %>% 
+# heldout
+data.heldout <- Example_data %>% 
                   filter (!id %in% data.trainest$id)
 
 # specify variables needed
@@ -109,7 +110,7 @@ id <- "id"; y <- "Y"; trt <- "trt";
 vars <- paste0("X", 1:3); prob <- "prob";
 
 # calling the ``rjaf`` function and implement clustering scheme
-forest.reg <- rjaf(data.trainest, data.validation, y, id, trt, vars, 
+forest.reg <- rjaf(data.trainest, data.heldout, y, id, trt, vars, 
                    prob, clus.max = 3, 
                    clus.tree.growing = TRUE, setseed = TRUE)
 
@@ -117,29 +118,29 @@ head(forest.reg)
 #> # A tibble: 6 × 5
 #>   id    trt.rjaf  Y.cf Y.rjaf clus.rjaf
 #>   <chr> <chr>    <dbl>  <dbl>     <int>
-#> 1 1     1            0  12.9          1
-#> 2 4     1           20  19.8          1
-#> 3 7     4          -40   9.81         1
-#> 4 8     1            0  18.0          1
-#> 5 9     4          -20  16.0          1
-#> 6 10    4          -20  10.3          1
+#> 1 2     4           40  16.5          2
+#> 2 4     1           20  15.9          2
+#> 3 5     4          -20   6.57         2
+#> 4 11    4          -20  19.7          2
+#> 5 12    4           20  22.3          2
+#> 6 13    4          -20   6.55         2
 ```
 
 ## References
 
 Bonhomme, Stéphane and Elena Manresa (2015). Grouped Patterns of
-Heterogeneity in Panel Data. Econometrica, 83: 1147-1184.
+Heterogeneity in Panel Data. *Econometrica*, 83: 1147-1184.
 
 Kallus, Nathan (2017). Recursive Partitioning for Personalization using
 Observational Data. In Precup, Doina and Yee Whye Teh, editors,
 Proceedings of the 34th International Conference on Machine Learning,
-volume 70 of Proceedings of Machine Learning Research, pages 1789–1798.
-PMLR.
+*Proceedings of the 34th International Conference on Machine Learning*,
+PMLR 70:1789-1798.
 
-Ladhania R, Spiess J, Ungar L, Wu W (2023). Personalized Assignment to
-One of Many Treatment Arms via Regularized and Clustered Joint
-Assignment Forests. <https://doi.org/10.48550/arXiv.2311.00577>.
+Ladhania Rahul, Spiess Jann, Ungar Lyle, Wu Wenbo (2023). Personalized
+Assignment to One of Many Treatment Arms via Regularized and Clustered
+Joint Assignment Forests. <https://doi.org/10.48550/arXiv.2311.00577>.
 
 Wager, Stefan and Susan Athey (2018). Estimation and inference of
-heterogeneous treatment effects using random forests. Journal of the
-American Statistical Association, 113(523):1228–1242.
+heterogeneous treatment effects using random forests. *Journal of the
+American Statistical Association*, 113(523):1228–1242.
