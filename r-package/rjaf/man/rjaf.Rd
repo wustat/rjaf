@@ -119,10 +119,10 @@ returns a list of two objects: a tibble named as \code{res} consisting of indivi
 IDs, cluster identifiers, and predicted outcomes, and a data frame named as
 \code{clustering} consisting of cluster identifiers, probabilities of being assigned
 to the clusters, and treatment arms. Otherwise, \code{rjaf} simply returns a tibble
-of individual IDs, optimal treatment arms identified by the algorithm, treatment
-clusters if \code{clus.tree.growing} is \code{TRUE}, and predicted optimal outcomes (ending
-with \code{.rjaf}). If counterfactual outcomes are also present, they will be included
-in the tibble along with the column of predicted outcomes (ending with \code{.cf}).
+of individual IDs (\code{id}), optimal treatment arms identified by the algorithm (\code{trt.rjaf}), treatment
+clusters (\code{clus.rjaf}) if \code{clus.tree.growing} is \code{TRUE}, and predicted optimal outcomes (\code{Y.rjaf}).
+If counterfactual outcomes are also present, they will be included
+in the tibble along with the column of predicted outcomes (\code{Y.cf}).
 }
 \description{
 This algorithm trains a joint forest model to estimate the optimal treatment assignment

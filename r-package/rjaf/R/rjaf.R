@@ -83,10 +83,10 @@
 #' IDs, cluster identifiers, and predicted outcomes, and a data frame named as
 #' `clustering` consisting of cluster identifiers, probabilities of being assigned
 #' to the clusters, and treatment arms. Otherwise, `rjaf` simply returns a tibble
-#' of individual IDs, optimal treatment arms identified by the algorithm, treatment
-#' clusters if `clus.tree.growing` is `TRUE`, and predicted optimal outcomes (ending
-#' with `.rjaf`). If counterfactual outcomes are also present, they will be included
-#' in the tibble along with the column of predicted outcomes (ending with `.cf`).
+#' of individual IDs (`id`), optimal treatment arms identified by the algorithm (`trt.rjaf`), treatment
+#' clusters (`clus.rjaf`) if `clus.tree.growing` is `TRUE`, and predicted optimal outcomes (`Y.rjaf`). 
+#' If counterfactual outcomes are also present, they will be included
+#' in the tibble along with the column of predicted outcomes (`Y.cf`).
 #' @export
 #'
 #' @examples
