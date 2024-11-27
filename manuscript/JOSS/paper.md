@@ -9,7 +9,7 @@ tags:
 - optimal assignment
 - R
 - C++
-date: "November 24, 2024"
+date: "November 27, 2024"
 output:
   pdf_document: default
   html_document:
@@ -48,7 +48,7 @@ There is an ever-growing literature at the intersection of machine learning and 
 
 # Workflow
 
-\autoref{fig:pkg} outlines the workflow for using the `rjaf` package to perform personalized treatment assignment and honest outcome estimation. The process begins with partitioning the input data--consisting of outcomes, treatment arms, covariates, individual identifiers, and optional probabilities of treatment assignment--into two parts, one for model training and estimation, and the other is the held-out set on which personalized assignment rules are obtained. The `rjaf` function first checks whether outcome residualization for reducing baseline variation should be performed via the `residualize` function, using the `resid` argument. If `resid` is set to `TRUE` (the default), a new column of residualized outcomes is added to the input data and used for tree growing on the training subset. Next, the `rjaf` function evaluates whether treatment clustering should be performed on the training and estimation set during tree growing using the `clus.tree.growing` argument. If `clus.tree.growing` is `TRUE`, the `rjaf_cpp` function is employed to estimate cross-validated counterfactual outcomes for the $K+1$ treatment arms, after which k-means clustering is used to learn $M+1$ treatment arm clusters. The optimal number of treatment clusters is determined using the elbow method. After clustering, the `rjaf_cpp` function is re-applied to the pre-processed data - with assignment forest fit on $M+1$ treatment clusters, and counterfactual outcomes estimated for the original $K+1$ arms. If `clus.tree.growing` is `FALSE`, the `rjaf_cpp` function is employed to estimate counterfactual outcomes for the $K+1$ arms. Lastly, `rjaf_cpp` function is used to obtain optimal treatment arms and predicted counterfactual outcomes under all treatment arms for individuals in the `held out` set.
+\autoref{fig:pkg} outlines the workflow for using the `rjaf` package to perform personalized treatment assignment and honest outcome estimation. The process begins with partitioning the input data--consisting of outcomes, treatment arms, covariates, individual identifiers, and optional probabilities of treatment assignment--into two parts, one for model training and estimation, and the other is the heldout set on which personalized assignment rules are obtained. The `rjaf` function first checks whether outcome residualization for reducing baseline variation should be performed via the `residualize` function, using the `resid` argument. If `resid` is set to `TRUE` (the default), a new column of residualized outcomes is added to the input data and used for tree growing on the training set. Next, the `rjaf` function evaluates whether treatment clustering should be performed on the training-estimation set during tree growing using the `clus.tree.growing` argument. If `clus.tree.growing` is `TRUE`, the `rjaf_cpp` function is employed to estimate cross-validated counterfactual outcomes for the $K+1$ treatment arms, after which k-means clustering is used to learn $M+1$ treatment arm clusters. The optimal number of treatment clusters is determined using the elbow method. After clustering, the `rjaf_cpp` function is reapplied to the preprocessed data, with assignment forest fitted on $M+1$ treatment clusters and counterfactual outcomes estimated for the original $K+1$ arms. If `clus.tree.growing` is `FALSE`, the `rjaf_cpp` function is employed to estimate counterfactual outcomes for the $K+1$ arms. Lastly, `rjaf_cpp` function is used to obtain optimal treatment arms and predicted counterfactual outcomes under all treatment arms for individuals in the heldout set.
 
 ![A sketch of the `rjaf` package. \label{fig:pkg}](pkg_sketch.pdf){height=95%}
 
@@ -69,7 +69,7 @@ library(rjaf)
 
 # Example
 
-Next we present an example that illustates the usage of the package. A function `sim.data` used for simulating a synthetic data set with three covariates is provided below, where `n` indicates the sample size, `K` + 1 represents the number of treatment arms, `gamma` denotes the strength of treatment effects, and `sigma` is the noise level, and `probability` is a vector of sampling probabilities of treatment arms. This function depends on two widely used `R` packages `MASS` and `dplyr`. The output of the `sim.data` function is a data frame, consisting of a column (named `id`) of individual IDs, a column (named `Y`) of outcomes, three columns of covariates `X1`, `X2`, and `X3`, a column (named `trt`) of treatment arms, and a column (named `prob`) of probabilities of treatment assignment. Readers are referred to @ladhania2023personalized [Section 4.1] for more details about the simulation setup.
+Next we present an example that illustates the usage of the package. A function `sim.data` used for simulating a synthetic data set with three covariates is provided below, where `n` indicates the sample size, `K`+1 represents the number of treatment arms, `gamma` denotes the strength of treatment effects, `sigma` is the noise level, and `probability` is a vector of sampling probabilities of treatment arms. This function depends on two widely used `R` packages `MASS` and `dplyr`. The output of the `sim.data` function is a data frame, containing a column (named `id`) of individual IDs, a column (named `Y`) of outcomes, three columns of covariates `X1`, `X2`, and `X3`, a column (named `trt`) of treatment arms, and a column (named `prob`) of probabilities of treatment assignment. Readers are referred to @ladhania2023personalized [Section 4.1] for more details about the simulation setup.
 
 ```r
 sim.data <- function(n, K, gamma, sigma, probability = rep(1,K+1)/(K+1)) {
@@ -91,7 +91,7 @@ sim.data <- function(n, K, gamma, sigma, probability = rep(1,K+1)/(K+1)) {
 }
 ```
 
-Using the `sim.data` function, we generate two data sets: one for training and estimation, and the other held out for validation, both of which have a sample size of 5000. The number of treatment arms is set to 30 (`K`=29), with a treatment effect strength of `gamma`=10 and a noise level of `sigma`=20. Treatment arms are uniformly assigned to all individuals across both data sets. Calling the function `rjaf` returns a tidyverse tibble containing individual IDs, optimal treatment arms, counterfactual outcomes, predicted outcomes, and treatment arm clusters.
+Using the `sim.data` function, we generate two data sets: one for training and estimation, and the other held out for validation, both of which have a sample size of 5000. The number of treatment arms is set to 30 (`K`=29), with a treatment effect strength of `gamma`=10 and a noise level of `sigma`=20. Treatment arms are uniformly assigned to all individuals across both data sets. Calling the `rjaf` function returns a tidyverse tibble [@muller2023] containing individual IDs, optimal treatment arms, counterfactual outcomes, predicted outcomes, and treatment arm clusters.
 
 ```r
 library(MASS)
