@@ -106,14 +106,14 @@ fit <- rjaf(data.trainest, data.heldout, y = "Y", id = "id", trt = "trt",
             impute = FALSE, clus.tree.growing = TRUE, clus.max = 5)
 head(fit)
 # A tibble: 6 × 5
-id    trt.rjaf Y.cf    Y.rjaf   clus.rjaf
-<chr> <chr>    <dbl>   <dbl>    <int>
-1     11       12.9    18.4     3
-2     11       12.9    18.5     3
-3     27       18.6    19.9     1
-4     27       38.6    23.4     1
-5     26       -2.14   14.4     1
-6     3        38.6    32.9     2
+  id    trt.rjaf  Y.cf Y.rjaf clus.rjaf
+  <chr> <chr>    <dbl>  <dbl>     <int>
+1 1     29        20     11.6         1
+2 2     29        40     11.5         1
+3 3     3         18.6   10.3         3
+4 4     3         38.6   10.4         3
+5 5     3         18.6   10.4         3
+6 6     3        -21.4   10.3         3
 ```
 
 To demonstrate the advantage of treatment arm clustering, we conducted a series of simulated data experiments following the above setup. In each experiment, 500 simulated Training-Estimation sets were generated, while the same heldout data set was used for validation across all Training-Estimation sets. The number of treatment arms was set to 10, 30, 50, and 100, respectively. \autoref{fig:rjaf_clustering} displays boxplots of 500 simulations comparing the average outcome of the heldout set from unclustered and clustered RJAF. "Oracle Optimal Assignment" denotes the assignment strategy derived from the ground truth in simulations, ensuring the best possible outcomes. "Random Assignment" involves randomly distributing units across treatment arms in each simulation. "Global Best Assignment" refers to assigning all units to the treatment in a simulation that demonstrates the highest average performance. Across all settings, the clustered RJAF is associated with a higher average outcome than the unclustered RJAF; the RJAF (both clustered and unclustered) consistently outperforms "Random Assignment" and "Global Best Assignment," while closely approximating the performance of the "Oracle Optimal Assignment."
@@ -125,3 +125,4 @@ To demonstrate the advantage of treatment arm clustering, we conducted a series 
 Wenbo Wu and Xinyi Zhang contributed equally to the project. Wenbo Wu and Rahul Ladhania were partially supported by a research grant from the Robert Wood Johnson Foundation titled *Informing Strategies to Increase Use of COVID-19 and Flu Vaccines by Different Racial and Ethnic Groups to Improve Health Equity during Health Crises* (award number 78416).
 
 # References
+
