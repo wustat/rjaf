@@ -20,7 +20,7 @@ authors:
   corresponding: true
   affiliation: 1
 - name: Xinyi Zhang
-  orcid: null
+  orcid: "0009-0007-7306-491X"
   affiliation: 1
 - name: Jann Spiess
   orcid: "0000-0002-4120-8241"
