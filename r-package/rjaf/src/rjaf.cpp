@@ -90,7 +90,10 @@ List splitting(const arma::vec &y, const arma::mat &X, const arma::uvec &trt, co
   if (ipw) {
     for (unsigned int i = 0; i < nvar; ++i) { // go through each covariate
       arma::vec x_uniq = sort(unique(X.col(i))), cutoffs;
-      if (x_uniq.n_elem < 10) { // fewer than 10 unique values 
+      if (x_uniq.n_elem < 2) {
+        qualified(i) = 0;
+        continue;
+      } else if (x_uniq.n_elem < 10) { // fewer than 10 unique values 
         cutoffs = x_uniq;
         // adjust the least cutoff to guarantee non-empty nodes
         cutoffs(0) = mean(cutoffs.subvec(0,1));
@@ -158,7 +161,10 @@ List splitting(const arma::vec &y, const arma::mat &X, const arma::uvec &trt, co
   } else {
     for (unsigned int i = 0; i < nvar; ++i) { // go through each covariate
       arma::vec x_uniq = sort(unique(X.col(i))), cutoffs;
-      if (x_uniq.n_elem < 10) {
+      if (x_uniq.n_elem < 2) {
+        qualified(i) = 0;
+        continue;
+      } else if (x_uniq.n_elem < 10) {
         cutoffs = x_uniq;
         cutoffs(0) = mean(cutoffs.subvec(0,1));
       } else {
