@@ -37,12 +37,12 @@ rjaf(
 row corresponds to an individual and columns contain information on treatments,
 covariates, probabilities of treatment assignment, and observed outcomes.}
 
-\item{data.heldout}{input data used for validation with the same row and
-column information as in \code{data.trainest}.}
+\item{data.heldout}{input data used for validation with covariates.}
 
 \item{y}{a character string denoting the column name of outcomes.}
 
-\item{id}{a character string denoting the column name of individual IDs.}
+\item{id}{a character string denoting the column name of individual IDs. If missing,
+a column named "id" will be added to \code{data.trainest} and \code{data.heldout} with numerical sequence.}
 
 \item{trt}{a character string denoting the column name of treatments.}
 
