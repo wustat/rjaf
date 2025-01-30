@@ -75,7 +75,6 @@ obtains the corresponding assignment.
 
 ``` r
 library(rjaf)
-#> Warning: package 'rjaf' was built under R version 4.3.3
 ```
 
 We use a data set simulated by `sim.data()` under the example section of
@@ -116,14 +115,14 @@ forest.reg <- rjaf(data.trainest, data.heldout, y, id, trt, vars,
 
 head(forest.reg)
 #> # A tibble: 6 × 5
-#>   id    trt.rjaf  Y.cf Y.rjaf clus.rjaf
-#>   <chr> <chr>    <dbl>  <dbl>     <int>
-#> 1 2     4           40  16.5          2
-#> 2 4     1           20  15.9          2
-#> 3 5     4          -20   6.57         2
-#> 4 11    4          -20  19.7          2
-#> 5 12    4           20  22.3          2
-#> 6 13    4          -20   6.55         2
+#>   id    trt.rjaf   Y.cf Y.rjaf clus.rjaf
+#>   <chr> <chr>     <dbl>  <dbl>     <int>
+#> 1 3     2         13.3   20.8          2
+#> 2 8     2          6.67  20.4          2
+#> 3 10    4        -20      9.76         2
+#> 4 13    2         -6.67   9.81         2
+#> 5 15    4        -20     13.2          2
+#> 6 17    2         -6.67   7.05         2
 ```
 
 ## References
@@ -137,9 +136,10 @@ Proceedings of the 34th International Conference on Machine Learning,
 *Proceedings of the 34th International Conference on Machine Learning*,
 PMLR 70:1789-1798.
 
-Ladhania Rahul, Spiess Jann, Ungar Lyle, Wu Wenbo (2023). Personalized
-Assignment to One of Many Treatment Arms via Regularized and Clustered
-Joint Assignment Forests. <https://doi.org/10.48550/arXiv.2311.00577>.
+Ladhania, Rahul, Jann Spiess, Lyle Ungar, and Wenbo Wu (2023).
+Personalized Assignment to One of Many Treatment Arms via Regularized
+and Clustered Joint Assignment Forests.
+<https://doi.org/10.48550/arXiv.2311.00577>.
 
 Wager, Stefan and Susan Athey (2018). Estimation and inference of
 heterogeneous treatment effects using random forests. *Journal of the
