@@ -101,7 +101,7 @@ Bonhomme, Stéphane and Elena Manresa (2015). Grouped Patterns of Heterogeneity 
 Kallus, Nathan (2017). Recursive Partitioning for Personalization using Observational Data. In Precup, Doina and Yee Whye Teh, editors, Proceedings of the 34th International Conference on Machine Learning, *Proceedings of the 34th International Conference on Machine Learning*, PMLR 70:1789-1798.
 \cr
 
-Ladhania Rahul, Spiess Jann, Ungar Lyle, Wu Wenbo (2023). Personalized Assignment to One of Many Treatment Arms via Regularized and Clustered Joint Assignment Forests. https://doi.org/10.48550/arXiv.2311.00577.
+Ladhania, Rahul, Jann Spiess, Lyle Ungar, and Wenbo Wu (2023). Personalized Assignment to One of Many Treatment Arms via Regularized and Clustered Joint Assignment Forests. https://doi.org/10.48550/arXiv.2311.00577.
 \cr
 
 Wager, Stefan and Susan Athey (2018). Estimation and inference of heterogeneous treatment effects using random forests. *Journal of the American Statistical Association*, 113(523):1228–1242.

@@ -27,7 +27,7 @@
 #' @param data.heldout input data used for validation with covariates.
 #' @param y a character string denoting the column name of outcomes.
 #' @param id a character string denoting the column name of individual IDs. If missing, 
-#' a column named "id" will be added to `data.trainest` and `data.heldout` with numerical sequence.
+#' a column of integers named "id" will be added to `data.trainest` and `data.heldout`.
 #' @param trt a character string denoting the column name of treatments.
 #' @param vars a vector of character strings denoting the column names of covariates. 
 #' @param prob a character string denoting the column name of probabilities of
@@ -153,18 +153,18 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
   trts <- unique(pull(data.trainest, trt))
   if (ntrt>length(trts)) stop("Invalid ntrt!")
   if (nvar>length(vars)) stop("Invalid nvar!")
-  if (missing(id)){
+  if (missing(id)) {
     id <- "id"
-    data.trainest <- data.trainest %>% mutate(id = 1:nrow(data.trainest))
-    data.heldout <- data.heldout %>% mutate(id = (1 + nrow(data.trainest)) : (nrow(data.trainest) + nrow(data.heldout)))
+    data.trainest <- data.trainest %>% mutate(id=1:nrow(data.trainest))
+    data.heldout <- data.heldout %>% mutate(id=(1+nrow(data.trainest)):(nrow(data.trainest)+nrow(data.heldout)))
   }
   if (missing(prob)) { # default to simple random treatment assignment
     prob <- "prob"
     proportions <- table(data.trainest %>% pull(trt)) / (nrow(data.trainest))
-    data.trainest <- data.trainest %>% mutate(!!(prob):= proportions[as.character(!!sym(trt))])
+    data.trainest <- data.trainest %>% mutate(!!(prob):=proportions[as.character(!!sym(trt))])
   }
   data.trainest <- mutate(data.trainest, across(c(id, trt), as.character))
-  data.heldout <- mutate(data.heldout, across(c(id), as.character))
+  data.heldout <- mutate(data.heldout, id=as.character(id))
   if (resid) {
     data.trainest <- residualize(data.trainest, y, vars, nfold)
   } else { # if resid is FALSE, the two columns of outcomes are identical.

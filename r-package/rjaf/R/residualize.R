@@ -2,7 +2,7 @@
 #'
 #'
 #' This function employs random forests and cross-validation to residualize
-#' outcomes following Wu and Gagnon-Bartsch (2018).
+#' outcomes following Section 3.3 of Ladhania et al. (2023).
 #' That is, predicted outcomes resulting from random forests are
 #' subtracted from the original outcomes. Doing so helps in adjusting for small imbalanaces
 #' in baseline covariates and removing part of the variation in
@@ -18,7 +18,7 @@
 #' Two options are `ranger` and `randomForest`, with the default being `ranger`.
 #' 
 #' @return data for training and estimation with residualized outcomes.
-#' @export 
+#' @export
 #'
 #' @examples 
 #' data(Example_data)
@@ -30,8 +30,9 @@
 #' Example_resid <- residualize(Example_trainest, y, vars, nfold = 5, fun.rf = "ranger")
 #' 
 #' @references 
-#' Wu, Edward and Johann A Gagnon-Bartsch (2018). The LOOP Estimator: Adjusting
-#' for Covariates in Randomized Experiments. Evaluation Review, 42(4):458–488.
+#' Ladhania Rahul, Spiess Jann, Ungar Lyle, Wu Wenbo (2023). Personalized Assignment 
+#' to One of Many Treatment Arms via Regularized and Clustered Joint Assignment Forests.
+#' https://doi.org/10.48550/arXiv.2311.00577.
 #' \cr
 #' 
 
