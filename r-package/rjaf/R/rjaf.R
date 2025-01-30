@@ -24,7 +24,8 @@
 #' @param data.trainest input data used for training and estimation, where each
 #' row corresponds to an individual and columns contain information on treatments,
 #' covariates, probabilities of treatment assignment, and observed outcomes.
-#' @param data.heldout input data used for validation with covariates.
+#' @param data.heldout input data used for validation with covariates
+#' and optional counterfactual outcomes.
 #' @param y a character string denoting the column name of outcomes.
 #' @param id a character string denoting the column name of individual IDs. If missing, 
 #' a column of integers named "id" will be added to `data.trainest` and `data.heldout`.

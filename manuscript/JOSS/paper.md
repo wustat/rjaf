@@ -32,7 +32,7 @@ bibliography: paper.bib
 affiliations:
 - name: Department of Population Health, NYU Grossman School of Medicine, USA
   index: 1
-- name: Graduate School of Business and Department of Economics, Stanford University, USA
+- name: Graduate School of Business, Stanford University, USA
   index: 2
 - name: Departments of Health Management and Policy and Biostatistics, University of Michigan School of Public Health, USA
   index: 3
