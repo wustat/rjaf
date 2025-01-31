@@ -165,7 +165,7 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
     data.trainest <- data.trainest %>% mutate(!!(prob):=proportions[as.character(!!sym(trt))])
   }
   data.trainest <- mutate(data.trainest, across(c(id, trt), as.character))
-  data.heldout <- mutate(data.heldout, id=as.character(id))
+  data.heldout <- mutate(data.heldout, id=as.character(!!sym(id)))
   if (resid) {
     data.trainest <- residualize(data.trainest, y, vars, nfold)
   } else { # if resid is FALSE, the two columns of outcomes are identical.
