@@ -238,7 +238,7 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
     return(list(res=res, clustering=df))
   } else {
     res <- tibble(!!(id):=as.character(pull(data.heldout, id)),
-                  !!(trt):=as.character(trts[ls.forest$trt.rjaf]),
+                  !!(paste0(trt, ".rjaf")):=as.character(trts[ls.forest$trt.rjaf]),
                   !!(paste0(y, ".rjaf")):=as.numeric(ls.forest$Y.pred))
     if (clus.tree.growing) {
       res <- res %>% left_join(xwalk, by=trt) %>%
