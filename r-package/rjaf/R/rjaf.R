@@ -233,7 +233,7 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
              prop.train, eps, reg, impute, setseed, seed)
   if (clus.tree.growing & clus.outcome.avg) {
     res <- tibble(!!(id):=as.character(pull(data.heldout, id)),
-                  cluster=as.character(clus[ls.forest$trt.rjaf]),
+                  clus.rjaf=as.character(clus[ls.forest$trt.rjaf]),
                   !!(paste0(y, ".rjaf")):=as.numeric(ls.forest$Y.pred))
     return(list(res=res, clustering=df))
   } else {
