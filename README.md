@@ -112,17 +112,29 @@ vars <- paste0("X", 1:3); prob <- "prob";
 forest.reg <- rjaf(data.trainest, data.heldout, y, id, trt, vars, 
                    prob, clus.max = 3, 
                    clus.tree.growing = TRUE, setseed = TRUE)
+```
 
-head(forest.reg)
+``` r
+head(forest.reg$res)
 #> # A tibble: 6 × 5
 #>   id    trt.rjaf   Y.cf Y.rjaf clus.rjaf
 #>   <chr> <chr>     <dbl>  <dbl>     <int>
-#> 1 3     2         13.3   20.8          2
-#> 2 8     2          6.67  20.4          2
-#> 3 10    4        -20      9.76         2
-#> 4 13    2         -6.67   9.81         2
-#> 5 15    4        -20     13.2          2
-#> 6 17    2         -6.67   7.05         2
+#> 1 2     2         26.7  31.4           2
+#> 2 3     2         13.3  13.9           2
+#> 3 5     4        -20    -0.678         2
+#> 4 6     4         40    15.6           2
+#> 5 7     4        -40     0.627         2
+#> 6 8     2          6.67 14.2           2
+head(forest.reg$counterfactuals)
+#> # A tibble: 6 × 5
+#>   Y_0.rjaf Y_1.rjaf Y_2.rjaf Y_3.rjaf Y_4.rjaf
+#>      <dbl>    <dbl>    <dbl>    <dbl>    <dbl>
+#> 1   18.7      23.1    31.4      28.0    27.4  
+#> 2   -0.368     5.89   13.9       6.97   11.9  
+#> 3  -13.4     -11.5    -3.38    -19.1    -0.678
+#> 4   -2.66     -1.67   12.9      -1.41   15.6  
+#> 5  -15.5     -15.0     0.429   -21.4     0.627
+#> 6    2.26      6.59   14.2      11.2    13.6
 ```
 
 ## References

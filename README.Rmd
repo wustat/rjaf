@@ -89,7 +89,11 @@ forest.reg <- rjaf(data.trainest, data.heldout, y, id, trt, vars,
                    prob, clus.max = 3, 
                    clus.tree.growing = TRUE, setseed = TRUE)
 
-head(forest.reg)
+```
+
+```{r}
+head(forest.reg$res)
+head(forest.reg$counterfactuals)
 ```
 
 
