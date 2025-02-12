@@ -254,7 +254,7 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
         inner_join(res, by=c(id, trt)) %>%
         rename_with(~str_c(.,".rjaf"), trt) %>%
         rename_with(~str_c(.,".cf"), y)
-    }else{
+    } else {
       res <- res %>% rename_with(~str_c(.,".rjaf"), trt)
     }
     return(res)
