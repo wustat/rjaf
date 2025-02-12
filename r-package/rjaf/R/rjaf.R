@@ -238,7 +238,7 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
     return(list(res=res, clustering=df))
   } else {
     res <- tibble(!!(id):=as.character(pull(data.heldout, id)),
-                  !!(paste0(trt, ".rjaf")):=as.character(trts[ls.forest$trt.rjaf]),
+                  !!(trt):=as.character(trts[ls.forest$trt.rjaf]),
                   !!(paste0(y, ".rjaf")):=as.numeric(ls.forest$Y.pred))
     if (clus.tree.growing) {
       res <- res %>% left_join(xwalk, by=trt) %>%
@@ -254,6 +254,8 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
         inner_join(res, by=c(id, trt)) %>%
         rename_with(~str_c(.,".rjaf"), trt) %>%
         rename_with(~str_c(.,".cf"), y)
+    }else{
+      res <- res %>% rename_with(~str_c(.,".rjaf"), trt)
     }
     return(res)
   }
