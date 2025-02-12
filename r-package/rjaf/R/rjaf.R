@@ -151,7 +151,7 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
                  resid=TRUE, clus.tree.growing=FALSE, clus.outcome.avg=FALSE,
                  clus.max=10, reg=TRUE, impute=TRUE,
                  setseed=FALSE, seed=1, nfold=5) {
-  trts <- unique(pull(data.trainest, trt))
+  trts <- sort(unique(pull(data.trainest, trt)))
   if (ntrt>length(trts)) stop("Invalid ntrt!")
   if (nvar>length(vars)) stop("Invalid nvar!")
   if (missing(id)) {
@@ -233,7 +233,7 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
              prop.train, eps, reg, impute, setseed, seed)
   
   counterfactuals <- as_tibble(ls.forest$Y.cf, .name_repair = "minimal") %>%
-     setNames(paste0(y, trts, "_c.rjaf"))
+     setNames(paste0(y,"_", trts, ".rjaf"))
   
   if (clus.tree.growing & clus.outcome.avg) {
     res <- tibble(!!(id):=as.character(pull(data.heldout, id)),
