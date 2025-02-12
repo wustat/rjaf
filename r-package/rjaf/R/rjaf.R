@@ -231,6 +231,10 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
              as.matrix(dplyr::select(data.heldout, all_of(vars))),
              nstr, nvar, lambda1, lambda2, ipw, nodesize, ntree,
              prop.train, eps, reg, impute, setseed, seed)
+  
+  counterfactuals <- as_tibble(ls.forest$Y.cf, .name_repair = "minimal") %>%
+     setNames(paste0(y, trts, "_c.rjaf"))
+  
   if (clus.tree.growing & clus.outcome.avg) {
     res <- tibble(!!(id):=as.character(pull(data.heldout, id)),
                   clus.rjaf=as.character(clus[ls.forest$trt.rjaf]),
@@ -257,6 +261,6 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
     } else {
       res <- res %>% rename_with(~str_c(.,".rjaf"), trt)
     }
-    return(res)
+    return(list(res=res, counterfactuals=counterfactuals))
   }
 }
