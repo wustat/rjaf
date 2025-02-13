@@ -83,11 +83,13 @@
 #' returns a list of two objects: a tibble named as `res` consisting of individual
 #' IDs, cluster identifiers, and predicted outcomes, and a data frame named as
 #' `clustering` consisting of cluster identifiers, probabilities of being assigned
-#' to the clusters, and treatment arms. Otherwise, `rjaf` simply returns a tibble
-#' of individual IDs (`id`), optimal treatment arms identified by the algorithm (`trt.rjaf`), treatment
+#' to the clusters, and treatment arms. Otherwise, `rjaf`  returns a list of two tibbles 
+#' named `res` and `counterfactuals`. `res` consists of individual IDs (`id`), 
+#' optimal treatment arms identified by the algorithm (`trt.rjaf`), treatment
 #' clusters (`clus.rjaf`) if `clus.tree.growing` is `TRUE`, and predicted optimal outcomes (`Y.rjaf`). 
 #' If counterfactual outcomes are also present, they will be included
-#' in the tibble along with the column of predicted outcomes (`Y.cf`).
+#' in `res` along with the column of predicted outcomes (`Y.cf`). `counterfactuals` consists of 
+#' counterfactual estimates of every available treatment. 
 #' @export
 #'
 #' @examples
@@ -126,6 +128,7 @@
 #' @importFrom stats kmeans as.formula predict
 #' @importFrom rlang := 
 #' @importFrom MASS mvrnorm
+#' @importFrom stats setNames
 #' @import dplyr forcats magrittr readr tibble stringr
 #'
 #' @references 

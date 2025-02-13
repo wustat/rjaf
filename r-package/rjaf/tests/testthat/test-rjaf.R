@@ -7,5 +7,5 @@ test_that("rjaf function computes correctly", {
   forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, 
                       clus.tree.growing = FALSE, setseed = TRUE)
   # Check if "forest.reg" has the expected class, for example, a tibble
-  expect_true(is.data.frame(forest.reg), "forest.reg should be a daraframe")
+  expect_true(is.data.frame(forest.reg$res) & is.data.frame(forest.reg$counterfactuals), "res should be a daraframe")
 })
