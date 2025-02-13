@@ -64,7 +64,7 @@ library(rjaf)
 
 We use a data set simulated by `sim.data()` under the example section of `rjaf.R`. This dataset contains a total of 100 items and 5 treatment arms, with a total of 12 covariates as documented in `data.R`. After preparing the `Example_data` into training, estimation, and heldout, we can obtain regularized averages by 5 treatment arms and acquire the optimal assignment. 
 
-Our algorithm returns a tibble named ``forest.reg``, with individual IDs, optimal treatment arms identified (`trt.rjaf`), predicted optimal outcomes (`Y.rjaf`), and treatment arm clusters (`clus.rjaf`). As counterfactual outcomes present, they are also included in the tibble (`Y.cf`).
+Our algorithm returns a list named ``forest.reg``, which includes two tibbles named ``res`` and ``counterfactuals``. ``res`` contains individual IDs, optimal treatment arms identified (`trt.rjaf`), predicted optimal outcomes (`Y.rjaf`), and treatment arm clusters (`clus.rjaf`). As counterfactual outcomes present, they are also included in ``res`` as `Y.cf`. ``counterfactuals`` contains estimated counterfactual outcomes from every treatment arm. 
 
 ```{r, message = FALSE}
 library(magrittr)

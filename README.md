@@ -84,11 +84,13 @@ preparing the `Example_data` into training, estimation, and heldout, we
 can obtain regularized averages by 5 treatment arms and acquire the
 optimal assignment.
 
-Our algorithm returns a tibble named `forest.reg`, with individual IDs,
-optimal treatment arms identified (`trt.rjaf`), predicted optimal
+Our algorithm returns a list named `forest.reg`, which includes two
+tibbles named `res` and `counterfactuals`. `res` contains individual
+IDs, optimal treatment arms identified (`trt.rjaf`), predicted optimal
 outcomes (`Y.rjaf`), and treatment arm clusters (`clus.rjaf`). As
-counterfactual outcomes present, they are also included in the tibble
-(`Y.cf`).
+counterfactual outcomes present, they are also included in `res` as
+`Y.cf`. `counterfactuals` contains estimated counterfactual outcomes
+from every treatment arm.
 
 ``` r
 library(magrittr)
@@ -119,22 +121,22 @@ head(forest.reg$res)
 #> # A tibble: 6 × 5
 #>   id    trt.rjaf   Y.cf Y.rjaf clus.rjaf
 #>   <chr> <chr>     <dbl>  <dbl>     <int>
-#> 1 2     2         26.7  31.4           2
-#> 2 3     2         13.3  13.9           2
-#> 3 5     4        -20    -0.678         2
-#> 4 6     4         40    15.6           2
-#> 5 7     4        -40     0.627         2
-#> 6 8     2          6.67 14.2           2
+#> 1 2     1         20     16.7          3
+#> 2 4     2         13.3   17.5          3
+#> 3 6     4         40     12.0          3
+#> 4 7     2        -26.7    8.69         3
+#> 5 8     2          6.67  18.9          3
+#> 6 14    2         33.3   27.0          3
 head(forest.reg$counterfactuals)
 #> # A tibble: 6 × 5
 #>   Y_0.rjaf Y_1.rjaf Y_2.rjaf Y_3.rjaf Y_4.rjaf
 #>      <dbl>    <dbl>    <dbl>    <dbl>    <dbl>
-#> 1   18.7      23.1    31.4      28.0    27.4  
-#> 2   -0.368     5.89   13.9       6.97   11.9  
-#> 3  -13.4     -11.5    -3.38    -19.1    -0.678
-#> 4   -2.66     -1.67   12.9      -1.41   15.6  
-#> 5  -15.5     -15.0     0.429   -21.4     0.627
-#> 6    2.26      6.59   14.2      11.2    13.6
+#> 1   -2.40    16.7      12.5      9.67    15.2 
+#> 2   -8.56     6.47     17.5     -1.98    11.4 
+#> 3   -9.03     7.99      6.58     3.43    12.0 
+#> 4  -17.3      0.638     8.69    -8.29     6.41
+#> 5   -4.44    11.1      18.9      4.65    14.0 
+#> 6    0.117   19.6      27.0      9.41    17.8
 ```
 
 ## References
