@@ -5,13 +5,14 @@
 
 <!-- badges: start -->
 
-[![CRAN
-status](https://www.r-pkg.org/badges/version/rjaf)](https://CRAN.R-project.org/package=rjaf)
-![](http://cranlogs.r-pkg.org/badges/grand-total/rjaf) [![License: GPL
+[![CRANstatus](https://www.r-pkg.org/badges/version/rjaf)](https://cran.r-project.org/package=rjaf)
+[![](https://cranlogs.r-pkg.org/badges/grand-total/rjaf)](https://cran.r-project.org/package=rjaf)
+[![License: GPL
 v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Project Status: Active – The project has reached a stable, usable
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![status](https://joss.theoj.org/papers/ff8fa725cc40d0247158bd244f1117be/status.svg)](https://joss.theoj.org/papers/ff8fa725cc40d0247158bd244f1117be)
 <!-- badges: end -->
 
 > Regularized Joint Assignment Forests with Treatment Arm Clustering
@@ -119,24 +120,24 @@ forest.reg <- rjaf(data.trainest, data.heldout, y, id, trt, vars,
 ``` r
 head(forest.reg$res)
 #> # A tibble: 6 × 5
-#>   id    trt.rjaf   Y.cf Y.rjaf clus.rjaf
-#>   <chr> <chr>     <dbl>  <dbl>     <int>
-#> 1 2     1         20     16.7          3
-#> 2 4     2         13.3   17.5          3
-#> 3 6     4         40     12.0          3
-#> 4 7     2        -26.7    8.69         3
-#> 5 8     2          6.67  18.9          3
-#> 6 14    2         33.3   27.0          3
+#>   id    trt.rjaf  Y.cf Y.rjaf clus.rjaf
+#>   <chr> <chr>    <dbl>  <dbl>     <int>
+#> 1 2     4         40     26.1         3
+#> 2 4     2         13.3   10.9         2
+#> 3 5     4        -20     11.5         3
+#> 4 7     4        -40     11.0         3
+#> 5 8     4         20     23.6         3
+#> 6 9     4        -20     23.7         3
 head(forest.reg$counterfactuals)
 #> # A tibble: 6 × 5
 #>   Y_0.rjaf Y_1.rjaf Y_2.rjaf Y_3.rjaf Y_4.rjaf
 #>      <dbl>    <dbl>    <dbl>    <dbl>    <dbl>
-#> 1   -2.40    16.7      12.5      9.67    15.2 
-#> 2   -8.56     6.47     17.5     -1.98    11.4 
-#> 3   -9.03     7.99      6.58     3.43    12.0 
-#> 4  -17.3      0.638     8.69    -8.29     6.41
-#> 5   -4.44    11.1      18.9      4.65    14.0 
-#> 6    0.117   19.6      27.0      9.41    17.8
+#> 1    -3.50     1.43    3.66     24.8     26.1 
+#> 2   -16.8     10.1    10.9       3.16     7.21
+#> 3   -12.3      6.40    7.34      5.73    11.5 
+#> 4   -13.1      7.94    8.05      4.72    11.0 
+#> 5    -5.64     1.06    3.30     21.3     23.6 
+#> 6    -7.22    -3.57    0.176    21.6     23.7
 ```
 
 ## References

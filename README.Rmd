@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 # rjaf
 
 <!-- badges: start -->
-[![CRAN status](https://www.r-pkg.org/badges/version/rjaf)](https://CRAN.R-project.org/package=rjaf) ![](http://cranlogs.r-pkg.org/badges/grand-total/rjaf)
+[![CRAN status](https://www.r-pkg.org/badges/version/rjaf)](https://CRAN.R-project.org/package=rjaf) ![](https://cranlogs.r-pkg.org/badges/grand-total/rjaf)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 <!-- badges: end -->
