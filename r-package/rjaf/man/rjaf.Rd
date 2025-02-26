@@ -116,16 +116,17 @@ residualization and k-means clustering. The default value is 5.}
 }
 \value{
 If \code{clus.tree.growing} and \code{clus.outcome.avg} are \code{TRUE}, \code{rjaf}
-returns a list of two objects: a tibble named as \code{res} consisting of individual
+returns a list of two objects: a tibble named as \code{fitted} consisting of individual
 IDs, cluster identifiers, and predicted outcomes, and a data frame named as
 \code{clustering} consisting of cluster identifiers, probabilities of being assigned
 to the clusters, and treatment arms. Otherwise, \code{rjaf}  returns a list of two tibbles
-named \code{res} and \code{counterfactuals}. \code{res} consists of individual IDs (\code{id}),
+named \code{fitted} and \code{counterfactuals}. \code{fitted} consists of individual IDs (\code{id}),
 optimal treatment arms identified by the algorithm (\code{trt.rjaf}), treatment
 clusters (\code{clus.rjaf}) if \code{clus.tree.growing} is \code{TRUE}, and predicted optimal outcomes (\code{Y.rjaf}).
 If counterfactual outcomes are also present, they will be included
 in \code{res} along with the column of predicted outcomes (\code{Y.cf}). \code{counterfactuals} consists of
-counterfactual estimates of every available treatment.
+counterfactual estimates of every available treatment. If \code{clus.tree.growing} is \code{TRUE},
+\code{rjaf} will also return a tibble \code{xwalk} that consists of \code{cluster} and \code{trt} based on k-means clustering.
 }
 \description{
 This algorithm trains a joint forest model to estimate the optimal treatment assignment

@@ -16,9 +16,14 @@ knitr::opts_chunk$set(
 # rjaf
 
 <!-- badges: start -->
-[![CRAN status](https://www.r-pkg.org/badges/version/rjaf)](https://CRAN.R-project.org/package=rjaf) ![](https://cranlogs.r-pkg.org/badges/grand-total/rjaf)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![CRANstatus](https://www.r-pkg.org/badges/version/rjaf)](https://cran.r-project.org/package=rjaf)
+[![](https://cranlogs.r-pkg.org/badges/grand-total/rjaf)](https://cran.r-project.org/package=rjaf)
+[![License: GPL
+v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Project Status: Active – The project has reached a stable, usable
+state and is being actively
+developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![status](https://joss.theoj.org/papers/ff8fa725cc40d0247158bd244f1117be/status.svg)](https://joss.theoj.org/papers/ff8fa725cc40d0247158bd244f1117be)
 <!-- badges: end -->
 
 > Regularized Joint Assignment Forests with Treatment Arm Clustering
@@ -64,7 +69,7 @@ library(rjaf)
 
 We use a data set simulated by `sim.data()` under the example section of `rjaf.R`. This dataset contains a total of 100 items and 5 treatment arms, with a total of 12 covariates as documented in `data.R`. After preparing the `Example_data` into training, estimation, and heldout, we can obtain regularized averages by 5 treatment arms and acquire the optimal assignment. 
 
-Our algorithm returns a list named ``forest.reg``, which includes two tibbles named ``res`` and ``counterfactuals``. ``res`` contains individual IDs, optimal treatment arms identified (`trt.rjaf`), predicted optimal outcomes (`Y.rjaf`), and treatment arm clusters (`clus.rjaf`). As counterfactual outcomes present, they are also included in ``res`` as `Y.cf`. ``counterfactuals`` contains estimated counterfactual outcomes from every treatment arm. 
+Our algorithm returns a list named ``forest.reg``, which includes two tibbles named ``fitted`` and ``counterfactuals``. ``fitted`` contains individual IDs, optimal treatment arms identified (`trt.rjaf`), predicted optimal outcomes (`Y.rjaf`), and treatment arm clusters (`clus.rjaf`). As counterfactual outcomes present, they are also included in ``fitted`` as `Y.cf`. ``counterfactuals`` contains estimated counterfactual outcomes from every treatment arm. If performing clustering, ``xwalk`` is included, which contains cluster number of treatment assigned by k-means algorithm.
 
 ```{r, message = FALSE}
 library(magrittr)
@@ -92,8 +97,9 @@ forest.reg <- rjaf(data.trainest, data.heldout, y, id, trt, vars,
 ```
 
 ```{r}
-head(forest.reg$res)
+head(forest.reg$fitted)
 head(forest.reg$counterfactuals)
+head(forest.reg$xwalk)
 ```
 
 

@@ -80,16 +80,17 @@
 #' 
 #' 
 #' @return If `clus.tree.growing` and `clus.outcome.avg` are `TRUE`, `rjaf`
-#' returns a list of two objects: a tibble named as `res` consisting of individual
+#' returns a list of two objects: a tibble named as `fitted` consisting of individual
 #' IDs, cluster identifiers, and predicted outcomes, and a data frame named as
 #' `clustering` consisting of cluster identifiers, probabilities of being assigned
 #' to the clusters, and treatment arms. Otherwise, `rjaf`  returns a list of two tibbles 
-#' named `res` and `counterfactuals`. `res` consists of individual IDs (`id`), 
+#' named `fitted` and `counterfactuals`. `fitted` consists of individual IDs (`id`), 
 #' optimal treatment arms identified by the algorithm (`trt.rjaf`), treatment
 #' clusters (`clus.rjaf`) if `clus.tree.growing` is `TRUE`, and predicted optimal outcomes (`Y.rjaf`). 
 #' If counterfactual outcomes are also present, they will be included
 #' in `res` along with the column of predicted outcomes (`Y.cf`). `counterfactuals` consists of 
-#' counterfactual estimates of every available treatment. 
+#' counterfactual estimates of every available treatment. If `clus.tree.growing` is `TRUE`, 
+#' `rjaf` will also return a tibble `xwalk` that consists of `cluster` and `trt` based on k-means clustering. 
 #' @export
 #'
 #' @examples
@@ -242,7 +243,7 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
     res <- tibble(!!(id):=as.character(pull(data.heldout, id)),
                   clus.rjaf=as.character(clus[ls.forest$trt.rjaf]),
                   !!(paste0(y, ".rjaf")):=as.numeric(ls.forest$Y.pred))
-    return(list(res=res, clustering=df))
+    return(list(fitted=res, clustering=df, xwalk = xwalk))
   } else {
     res <- tibble(!!(id):=as.character(pull(data.heldout, id)),
                   !!(trt):=as.character(trts[ls.forest$trt.rjaf]),
@@ -264,6 +265,10 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
     } else {
       res <- res %>% rename_with(~str_c(.,".rjaf"), trt)
     }
-    return(list(res=res, counterfactuals=counterfactuals))
+    if (clus.tree.growing){
+      return(list(fitted=res, counterfactuals=counterfactuals, xwalk = xwalk))
+    } else {
+      return(list(fitted=res, counterfactuals=counterfactuals))
+    }
   }
 }

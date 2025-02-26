@@ -86,12 +86,14 @@ can obtain regularized averages by 5 treatment arms and acquire the
 optimal assignment.
 
 Our algorithm returns a list named `forest.reg`, which includes two
-tibbles named `res` and `counterfactuals`. `res` contains individual
-IDs, optimal treatment arms identified (`trt.rjaf`), predicted optimal
-outcomes (`Y.rjaf`), and treatment arm clusters (`clus.rjaf`). As
-counterfactual outcomes present, they are also included in `res` as
-`Y.cf`. `counterfactuals` contains estimated counterfactual outcomes
-from every treatment arm.
+tibbles named `fitted` and `counterfactuals`. `fitted` contains
+individual IDs, optimal treatment arms identified (`trt.rjaf`),
+predicted optimal outcomes (`Y.rjaf`), and treatment arm clusters
+(`clus.rjaf`). As counterfactual outcomes present, they are also
+included in `fitted` as `Y.cf`. `counterfactuals` contains estimated
+counterfactual outcomes from every treatment arm. If performing
+clustering, `xwalk` is included, which contains cluster number of
+treatment assigned by k-means algorithm.
 
 ``` r
 library(magrittr)
@@ -118,26 +120,33 @@ forest.reg <- rjaf(data.trainest, data.heldout, y, id, trt, vars,
 ```
 
 ``` r
-head(forest.reg$res)
+head(forest.reg$fitted)
 #> # A tibble: 6 × 5
 #>   id    trt.rjaf  Y.cf Y.rjaf clus.rjaf
 #>   <chr> <chr>    <dbl>  <dbl>     <int>
-#> 1 2     4         40     26.1         3
-#> 2 4     2         13.3   10.9         2
-#> 3 5     4        -20     11.5         3
-#> 4 7     4        -40     11.0         3
-#> 5 8     4         20     23.6         3
-#> 6 9     4        -20     23.7         3
+#> 1 3     4            0   16.6         2
+#> 2 4     4            0   15.0         2
+#> 3 5     4          -20   10.6         2
+#> 4 6     4           40   23.8         2
+#> 5 8     4           20   17.8         2
+#> 6 9     4          -20   22.8         2
 head(forest.reg$counterfactuals)
 #> # A tibble: 6 × 5
 #>   Y_0.rjaf Y_1.rjaf Y_2.rjaf Y_3.rjaf Y_4.rjaf
 #>      <dbl>    <dbl>    <dbl>    <dbl>    <dbl>
-#> 1    -3.50     1.43    3.66     24.8     26.1 
-#> 2   -16.8     10.1    10.9       3.16     7.21
-#> 3   -12.3      6.40    7.34      5.73    11.5 
-#> 4   -13.1      7.94    8.05      4.72    11.0 
-#> 5    -5.64     1.06    3.30     21.3     23.6 
-#> 6    -7.22    -3.57    0.176    21.6     23.7
+#> 1    -1.84   0.0886    1.35     0.141     16.6
+#> 2    -5.35  -1.07     -0.464   -4.02      15.0
+#> 3    -6.77  -7.86     -4.25    -8.76      10.6
+#> 4    -4.37  -6.92     10.2     10.2       23.8
+#> 5     4.69   7.93      6.87    11.1       17.8
+#> 6   -11.2  -14.1       6.02     2.69      22.8
+head(forest.reg$xwalk)
+#>   cluster trt
+#> 1       3   0
+#> 2       1   1
+#> 3       1   2
+#> 4       1   3
+#> 5       2   4
 ```
 
 ## References
