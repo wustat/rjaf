@@ -238,7 +238,8 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
              prop.train, eps, reg, impute, setseed, seed)
   counterfactuals <- ls.forest$Y.cf %>% as_tibble(.name_repair="minimal") %>%
     setNames(paste0(y,"_", trts, ".rjaf")) %>%
-    mutate(!!(id):=as.character(pull(data.heldout, id)))
+    mutate(!!(id):=as.character(pull(data.heldout, id))) %>%
+    relocate(!!id)
   if (clus.tree.growing & clus.outcome.avg) {
     res <- tibble(!!(id):=as.character(pull(data.heldout, id)),
                   clus.rjaf=as.character(clus[ls.forest$trt.rjaf]),
