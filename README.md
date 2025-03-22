@@ -66,7 +66,7 @@ original arms are combined by groups) to obtain an ensemble of trees.
 The following scripts demonstrate the function `rjaf()`, which
 constructs a joint forest model to estimate the optimal treatment
 assignment by pooling information across treatment arms using a
-clustering scheme. By inputting training, estimation, and heldout data,
+clustering scheme. By inputting training, estimation, and held-out data,
 we can obtain final regularized predictions and assignments in
 `forest.reg`, where the algorithm estimates regularized averages
 separately by the original treatment arms $k \in \{0,\ldots,K\}$ and
@@ -78,22 +78,24 @@ obtains the corresponding assignment.
 library(rjaf)
 ```
 
-We use a data set simulated by `sim.data()` under the example section of
-`rjaf.R`. This dataset contains a total of 100 items and 5 treatment
+We use a dataset simulated by `sim.data()` under the example section of
+`rjaf.R`. This dataset contains a total of 100 rows and 5 treatment
 arms, with a total of 12 covariates as documented in `data.R`. After
-preparing the `Example_data` into training, estimation, and heldout, we
-can obtain regularized averages by 5 treatment arms and acquire the
-optimal assignment.
+dividing the `Example_data` into training-estimation and held-out sets,
+we can obtain regularized averages by 5 treatment arms and optimal
+treatment assignments.
 
 Our algorithm returns a list named `forest.reg`, which includes two
-tibbles named `fitted` and `counterfactuals`. `fitted` contains
-individual IDs, optimal treatment arms identified (`trt.rjaf`),
-predicted optimal outcomes (`Y.rjaf`), and treatment arm clusters
-(`clus.rjaf`). As counterfactual outcomes present, they are also
-included in `fitted` as `Y.cf`. `counterfactuals` contains estimated
-counterfactual outcomes from every treatment arm. If performing
-clustering, `xwalk` is included, which contains cluster number of
-treatment assigned by k-means algorithm.
+tibbles named `fitted` and `counterfactuals`. The `fitted` contains
+individual IDs from the held-out set, optimal treatment arms identified
+(`trt.rjaf`), predicted optimal outcomes (`Y.rjaf`), and treatment arm
+clusters (`clus.rjaf`). In this example, since we know the
+counterfactual outcomes, we include those under optimal treatment arms
+`trt.rjaf` identified by the algorithm in `fitted` as `Y.cf`. The tibble
+`counterfactuals` contains estimated counterfactual outcomes for every
+treatment arm. If performing clustering, the tibble `xwalk` is also
+returned by the algorithm. `xwalk` has the treatments and their assigned
+cluster memberships (based on the k-means algorithm).
 
 ``` r
 library(magrittr)
@@ -101,13 +103,13 @@ library(dplyr)
 
 # prepare training, estimation, and heldout data
 data("Example_data")
-
+set.seed(1)
 # training and estimation
 data.trainest <- Example_data %>% 
-                  slice_sample (n = floor(0.5 * nrow(Example_data)))
-# heldout
+                  slice_sample(n=floor(0.5*nrow(Example_data)))
+# held-out
 data.heldout <- Example_data %>% 
-                  filter (!id %in% data.trainest$id)
+                  filter(!id %in% data.trainest$id)
 
 # specify variables needed
 id <- "id"; y <- "Y"; trt <- "trt";  
@@ -115,38 +117,38 @@ vars <- paste0("X", 1:3); prob <- "prob";
 
 # calling the ``rjaf`` function and implement clustering scheme
 forest.reg <- rjaf(data.trainest, data.heldout, y, id, trt, vars, 
-                   prob, clus.max = 3, 
-                   clus.tree.growing = TRUE, setseed = TRUE)
+                   prob, clus.max=3, 
+                   clus.tree.growing=TRUE, setseed=TRUE)
 ```
 
 ``` r
 head(forest.reg$fitted)
 #> # A tibble: 6 × 5
-#>   id    trt.rjaf  Y.cf Y.rjaf clus.rjaf
-#>   <chr> <chr>    <dbl>  <dbl>     <int>
-#> 1 3     4            0   16.6         2
-#> 2 4     4            0   15.0         2
-#> 3 5     4          -20   10.6         2
-#> 4 6     4           40   23.8         2
-#> 5 8     4           20   17.8         2
-#> 6 9     4          -20   22.8         2
+#>   id    trt.rjaf   Y.cf Y.rjaf clus.rjaf
+#>   <chr> <chr>     <dbl>  <dbl>     <int>
+#> 1 3     2         13.3   11.6          3
+#> 2 4     4          0      8.56         1
+#> 3 5     2         -6.67   7.38         3
+#> 4 8     3         13.3   18.9          2
+#> 5 9     3        -26.7   20.7          2
+#> 6 10    3        -26.7   16.7          2
 head(forest.reg$counterfactuals)
-#> # A tibble: 6 × 5
-#>   Y_0.rjaf Y_1.rjaf Y_2.rjaf Y_3.rjaf Y_4.rjaf
-#>      <dbl>    <dbl>    <dbl>    <dbl>    <dbl>
-#> 1    -1.84   0.0886    1.35     0.141     16.6
-#> 2    -5.35  -1.07     -0.464   -4.02      15.0
-#> 3    -6.77  -7.86     -4.25    -8.76      10.6
-#> 4    -4.37  -6.92     10.2     10.2       23.8
-#> 5     4.69   7.93      6.87    11.1       17.8
-#> 6   -11.2  -14.1       6.02     2.69      22.8
+#> # A tibble: 6 × 6
+#>   Y_0.rjaf Y_1.rjaf Y_2.rjaf Y_3.rjaf Y_4.rjaf id   
+#>      <dbl>    <dbl>    <dbl>    <dbl>    <dbl> <chr>
+#> 1     1.55     6.72    11.6      5.77     9.18 3    
+#> 2    -2.09     6.92     6.83    -4.10     8.56 4    
+#> 3    -1.72     1.19     7.38     3.09     4.46 5    
+#> 4     5.99    10.8     15.3     18.9     10.1  8    
+#> 5     9.59     3.15    16.7     20.7     13.3  9    
+#> 6     7.01     1.86    13.4     16.7      9.94 10
 head(forest.reg$xwalk)
 #>   cluster trt
-#> 1       3   0
+#> 1       1   0
 #> 2       1   1
-#> 3       1   2
-#> 4       1   3
-#> 5       2   4
+#> 3       3   2
+#> 4       2   3
+#> 5       1   4
 ```
 
 ## References

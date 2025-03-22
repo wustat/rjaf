@@ -57,7 +57,7 @@ It first obtains an assignment forest by bagging trees as described in Kallus (2
 
 Like Bonhomme and Manresa (2015), it uses a clustering of treatment arms when constructing the assignment trees. It employs a k-means algorithm for clustering the K treatment arms into M treatment groups based on the K predictions for each of the n units in the training sample. After clustering, it then repeats the assignment-forest algorithm on the full training data with M+1 (including control) "arms" (where data from the original arms are combined by groups) to obtain an ensemble of trees.
 
-The following scripts demonstrate the function ``rjaf()``, which constructs a joint forest model to estimate the optimal treatment assignment by pooling information across treatment arms using a clustering scheme. By inputting training, estimation, and heldout data, we can obtain final regularized predictions and assignments in ``forest.reg``, where the algorithm estimates regularized averages separately by the original treatment arms $k \in \{0,\ldots,K\}$ and obtains the corresponding assignment.
+The following scripts demonstrate the function ``rjaf()``, which constructs a joint forest model to estimate the optimal treatment assignment by pooling information across treatment arms using a clustering scheme. By inputting training, estimation, and held-out data, we can obtain final regularized predictions and assignments in ``forest.reg``, where the algorithm estimates regularized averages separately by the original treatment arms $k \in \{0,\ldots,K\}$ and obtains the corresponding assignment.
 
 
 ## Example
@@ -81,7 +81,7 @@ set.seed(1)
 # training and estimation
 data.trainest <- Example_data %>% 
                   slice_sample(n=floor(0.5*nrow(Example_data)))
-# heldout
+# held-out
 data.heldout <- Example_data %>% 
                   filter(!id %in% data.trainest$id)
 
