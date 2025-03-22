@@ -87,10 +87,11 @@
 #' named `fitted` and `counterfactuals`. `fitted` consists of individual IDs (`id`), 
 #' optimal treatment arms identified by the algorithm (`trt.rjaf`), treatment
 #' clusters (`clus.rjaf`) if `clus.tree.growing` is `TRUE`, and predicted optimal outcomes (`Y.rjaf`). 
-#' If counterfactual outcomes are also present, they will be included
-#' in `res` along with the column of predicted outcomes (`Y.cf`). `counterfactuals` consists of 
-#' counterfactual estimates of every available treatment. If `clus.tree.growing` is `TRUE`, 
-#' `rjaf` will also return a tibble `xwalk` that consists of `cluster` and `trt` based on k-means clustering. 
+#' If counterfactual outcomes are also present, a column `Y.cf` will be included
+#' in `fitted` along with `Y.rjaf`. `counterfactuals` contains estimated 
+#' counterfactual outcomes for every treatment arm. If `clus.tree.growing` is `TRUE`,
+#' `rjaf` will also return a tibble `xwalk` that includes `trt` as the treatments 
+#' and `cluster` as their assigned cluster memberships based on k-means clustering. 
 #' @export
 #'
 #' @examples
@@ -235,15 +236,14 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
              as.matrix(dplyr::select(data.heldout, all_of(vars))),
              nstr, nvar, lambda1, lambda2, ipw, nodesize, ntree,
              prop.train, eps, reg, impute, setseed, seed)
-  
-  counterfactuals <- as_tibble(ls.forest$Y.cf, .name_repair = "minimal") %>%
-     setNames(paste0(y,"_", trts, ".rjaf"))
-  
+  counterfactuals <- ls.forest$Y.cf %>% as_tibble(.name_repair="minimal") %>%
+    setNames(paste0(y,"_", trts, ".rjaf")) %>%
+    mutate(!!(id):=as.character(pull(data.heldout, id)))
   if (clus.tree.growing & clus.outcome.avg) {
     res <- tibble(!!(id):=as.character(pull(data.heldout, id)),
                   clus.rjaf=as.character(clus[ls.forest$trt.rjaf]),
                   !!(paste0(y, ".rjaf")):=as.numeric(ls.forest$Y.pred))
-    return(list(fitted=res, clustering=df, xwalk = xwalk))
+    return(list(fitted=res, clustering=df, xwalk=xwalk))
   } else {
     res <- tibble(!!(id):=as.character(pull(data.heldout, id)),
                   !!(trt):=as.character(trts[ls.forest$trt.rjaf]),
@@ -265,8 +265,8 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
     } else {
       res <- res %>% rename_with(~str_c(.,".rjaf"), trt)
     }
-    if (clus.tree.growing){
-      return(list(fitted=res, counterfactuals=counterfactuals, xwalk = xwalk))
+    if (clus.tree.growing) {
+      return(list(fitted=res, counterfactuals=counterfactuals, xwalk=xwalk))
     } else {
       return(list(fitted=res, counterfactuals=counterfactuals))
     }
