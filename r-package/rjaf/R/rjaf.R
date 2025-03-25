@@ -70,6 +70,10 @@
 #' average outcome is used to impute the arm-wise within-leaf average outcome
 #' when the arm has no observation. If `FALSE`, the within-leaf average outcome
 #' is set to zero when the arm has no observation. The default value is `TRUE`.
+#' @param setseed a logical indicator. If `TRUE`, a seed is set through the
+#' argument `seed` below. The default value is `FALSE`.
+#' @param seed an integer used as a random seed if `setseed=TRUE`.
+#' The default value is 1.
 #' @param nfold the number of folds used for cross-validation in outcome
 #' residualization and k-means clustering. The default value is 5.
 #' 
@@ -150,7 +154,9 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
                  ntrt=5, nvar=3, lambda1=0.5, lambda2=0.5, ipw=TRUE,
                  nodesize=5, ntree=1000, prop.train=0.5, eps=0.1,
                  resid=TRUE, clus.tree.growing=FALSE, clus.outcome.avg=FALSE,
-                 clus.max=10, reg=TRUE, impute=TRUE, nfold=5) {
+                 clus.max=10, reg=TRUE, impute=TRUE, 
+                 setseed=FALSE, seed=1, nfold=5) {
+  if (setseed) {set.seed(seed)}
   trts <- sort(unique(pull(data.trainest, trt)))
   if (ntrt>length(trts)) stop("Invalid ntrt!")
   if (nvar>length(vars)) stop("Invalid nvar!")
