@@ -59,12 +59,6 @@ List slice_sample(const arma::uvec &ids, const arma::uvec &trt, const double &pr
   return List::create(_["ids_train"]=ids_train, _["ids_est"]=ids_est);
 }
 
-void set_seed(unsigned int seed) {
-  Rcpp::Environment base_env("package:base");
-  Rcpp::Function set_seed_r = base_env["set.seed"];
-  set_seed_r(seed);  
-}
-
 // identify the optimal split given a subsample of training data
 List splitting(const arma::vec &y, const arma::mat &X, const arma::uvec &trt, const arma::vec &prob,
                const double &lambda=0.5, const bool &ipw=true,
@@ -248,10 +242,8 @@ List growTree(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
               const unsigned int &nodesize=5,
               const double &prop_train=0.5,
               const double &eps=0.1, const bool &reg=true,
-              const bool &impute=true,
-              const bool &setseed=false, const unsigned int &seed=1) {
+              const bool &impute=true) {
   // lambda1 for tree growing on training set; lambda2 for tree growing on estimation and heldout sets
-  if (setseed) set_seed(seed);
   // analogous to slice_sample in dplyr: sampling within each treatment slice
   List list_ids = slice_sample(arma::regspace<arma::uvec>(0, X_trainest.n_rows-1),
                                trt_trainest, prop_train);
@@ -457,9 +449,7 @@ List rjaf_cpp(const arma::vec &y_trainest, const arma::vec &y_trainest_resid,
               const bool &ipw=true, const unsigned int &nodesize=5,
               const unsigned int &ntree=1000,
               const double &prop_train=0.5, const double &eps=0.1,
-              const bool &reg=true, const bool &impute=true,
-              const bool &setseed=false, const unsigned int &seed=1) {
-  if (setseed) set_seed(seed);
+              const bool &reg=true, const bool &impute=true) {
   arma::uvec clus_uniq = sort(unique(cluster_trainest));
   unsigned int nclus = clus_uniq.n_elem;
   arma::mat outcome(X_heldout.n_rows, nclus, arma::fill::zeros), ct(X_heldout.n_rows, nclus, arma::fill::zeros);

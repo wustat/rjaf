@@ -70,11 +70,6 @@
 #' average outcome is used to impute the arm-wise within-leaf average outcome
 #' when the arm has no observation. If `FALSE`, the within-leaf average outcome
 #' is set to zero when the arm has no observation. The default value is `TRUE`.
-#' @param setseed a logical indicator. If `TRUE`, a seed is set through the
-#' argument `seed` below and passed to the function `rjaf_cpp`.
-#' The default value is `FALSE`.
-#' @param seed an integer used as a random seed if `setseed=TRUE`.
-#' The default value is 1.
 #' @param nfold the number of folds used for cross-validation in outcome
 #' residualization and k-means clustering. The default value is 5.
 #' 
@@ -117,6 +112,7 @@
 #' }
 #' 
 #' n <- 200; K <- 3; gamma <- 10; sigma <- 10
+#' set.seed(1)
 #' Example_data <- sim.data(n, K, gamma, sigma)
 #' Example_trainest <- Example_data %>% slice_sample(n = floor(0.5 * nrow(Example_data)))
 #' Example_heldout <- Example_data %>% filter(!id %in% Example_trainest$id)
@@ -154,8 +150,7 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
                  ntrt=5, nvar=3, lambda1=0.5, lambda2=0.5, ipw=TRUE,
                  nodesize=5, ntree=1000, prop.train=0.5, eps=0.1,
                  resid=TRUE, clus.tree.growing=FALSE, clus.outcome.avg=FALSE,
-                 clus.max=10, reg=TRUE, impute=TRUE,
-                 setseed=FALSE, seed=1, nfold=5) {
+                 clus.max=10, reg=TRUE, impute=TRUE, nfold=5) {
   trts <- sort(unique(pull(data.trainest, trt)))
   if (ntrt>length(trts)) stop("Invalid ntrt!")
   if (nvar>length(vars)) stop("Invalid nvar!")
@@ -195,7 +190,7 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
                                      as.character(trts))),
                    as.matrix(dplyr::select(data.onefold, all_of(vars))),
                    ntrt, nvar, lambda1, lambda2, ipw, nodesize, ntree,
-                   prop.train, eps, reg, impute, setseed, seed)$Y.cf
+                   prop.train, eps, reg, impute)$Y.cf
         }))), i, nstart=5))
     vec.prop <- sapply(ls.kmeans, function(list) list$betweenss/list$totss)
     cluster <- ls.kmeans[[which.max(diff(vec.prop))+1]]$cluster
@@ -235,7 +230,7 @@ rjaf <- function(data.trainest, data.heldout, y, id, trt, vars, prob,
              str.tree.growing, prob.tree.growing, str.outcome.avg,
              as.matrix(dplyr::select(data.heldout, all_of(vars))),
              nstr, nvar, lambda1, lambda2, ipw, nodesize, ntree,
-             prop.train, eps, reg, impute, setseed, seed)
+             prop.train, eps, reg, impute)
   counterfactuals <- ls.forest$Y.cf %>% as_tibble(.name_repair="minimal") %>%
     setNames(paste0(y,"_", trts, ".rjaf")) %>%
     mutate(!!(id):=as.character(pull(data.heldout, id))) %>%

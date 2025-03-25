@@ -91,8 +91,7 @@ vars <- paste0("X", 1:3); prob <- "prob";
 
 # calling the ``rjaf`` function and implement clustering scheme
 forest.reg <- rjaf(data.trainest, data.heldout, y, id, trt, vars, 
-                   prob, clus.max=3, 
-                   clus.tree.growing=TRUE, setseed=TRUE)
+                   prob, clus.max=3, clus.tree.growing=TRUE)
 
 ```
 

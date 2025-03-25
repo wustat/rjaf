@@ -5,7 +5,7 @@ test_that("rjaf function computes correctly", {
   id <- "id"; y <- "Y"; trt <- "trt";  
   vars <- paste0("X", 1:3); 
   forest.reg <- rjaf(Example_trainest, Example_valid, y, id, trt, vars, 
-                      clus.tree.growing = FALSE, setseed = TRUE)
+                      clus.tree.growing = FALSE)
   # Check if "forest.reg" has the expected class, for example, a tibble
   expect_true(is.data.frame(forest.reg$fitted) & is.data.frame(forest.reg$counterfactuals), "fitted and counterfactuals should be dataframes")
 })
