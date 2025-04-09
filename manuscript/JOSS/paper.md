@@ -1,5 +1,5 @@
 ---
-title: '`rjaf`: Regularized Joint Assignment Forest with Treatment Arm Clustering'
+title: 'rjaf: Regularized Joint Assignment Forest with Treatment Arm Clustering'
 tags:
 - machine learning
 - causal inference
